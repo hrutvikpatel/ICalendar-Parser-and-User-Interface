@@ -1,0 +1,8 @@
+**/.vscode
+*.code-workspace
+*.out
+*.so
+*.o
+*.ics
+*.pdf
+node_modules

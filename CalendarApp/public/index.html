@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>iCalendar File Manager</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Assignment 3">
+    <meta name="keywords" content="Assignment 3">
+    <meta name="author" content="Hrutvikkumar Patel (hrutvikk@uoguelph.ca)">
+    <!-- Load jquery, bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    <!-- Custom CSS End -->
+</head>
+
+<body>
+
+    <!-- Jumotron of the title. -->
+    <div class="jumbotron jumbotron-fluid">
+        <div class="myJumotron mt-3">
+            <h1 class="text-light text-center display-4">iCalendar File Manager</h1>
+        </div>
+    </div>
+
+    <div class="container shadow-lg">
+
+        <div class="btn-group float-right mb-5" role="group" aria-label="Basic example">
+            <!-- Login Button trigger modal -->
+            <button id="loginBtn" type="button" class="btn btn-primary" data-toggle="modal" data-target="#loginModal" data-backdrop="static" data-keyboard="false">
+                &nbsp;Login&nbsp;
+            </button>
+
+            <!-- Login Modal -->
+            <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="loginModalLabel">Login</h5>
+                        </div>
+                        <div class="modal-body">
+                            <form id="login-form" class="login-form-validation" novalidate>
+
+                                <!-- UserName Input -->
+                                <div class="form-row mb-3">
+                                    <label for="username">Username</label>
+                                    <div class="input-group">
+                                        <input id="username" name="username" type="text" class="form-control" required>
+                                        <div class="invalid-feedback">
+                                            Please enter your username.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Database Name Input -->
+                                <div class="form-row mb-3">
+                                    <label for="database">Database Name</label>
+                                    <input type="text" class="form-control" id="database" name="database" required>
+                                    <div class="invalid-feedback">
+                                        Please enter a database name.
+                                    </div>
+                                </div>
+
+                                <!-- Password ID Input -->
+                                <div class="form-row mb-3">
+                                    <label for="password">Password</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="password" name="password" required>
+                                        <div class="invalid-feedback">
+                                            Please enter a your password.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Close and Login -->
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" id="modal-login-btn" type="submit">Login</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button id="logoutBtn" type="button" class="btn btn-danger">Logout</button>
+        </div>
+
+
+        <!-- Status Panel -->
+        <div class="parent">
+            <!-- Clear status list btn and Header -->
+            <span>
+                <p class="h3 font-weight-bold">Status</p>
+            </span>
+            <span> <button class="btn btn-warning" type="button" id="clear-status-list">Clear All</button> </span>
+        </div>
+
+        <hr>
+        <!-- Status List -->
+        <div class="row panel">
+            <div class="col-12">
+                <div class="table-responsive status-panel bg-light " id="status-panel">
+                    <ul class="list-group" id="status-list">
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Log Panel -->
+        <div class="parent">
+            <span>
+                <p class="h3 font-weight-bold">File Log</p>
+
+            </span>
+            <!-- Upload Btn -->
+            <span>
+                <input class="upload-btn" type="file" name="fileupload" value="fileupload" id="fileToUpload">
+                <input class="btn btn-warning" type="submit" value="Upload File" id="uploadFile">
+            </span>
+        </div>
+
+        <hr>
+        <!-- File Log Table -->
+        <div class="row panel">
+            <div class="col-12">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead class="thead-light sticky">
+                            <tr>
+                                <th scope="col">File name <br> (click to download)</th>
+                                <th scope="col">Version</th>
+                                <th scope="col">Product ID</th>
+                                <th scope="col">No. of Events</th>
+                                <th scope="col">No. of Properties</th>
+                            </tr>
+                        </thead>
+                        <!-- File Log Panel Body -->
+                        <tbody id="fileLogPanel">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Calendar View Panel -->
+        <div class="parent">
+            <span>
+                <p class="h3 font-weight-bold">Calendar View</p>
+            </span>
+            <span>
+
+                <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+
+                    <!-- Create Calendar Modal Trigger -->
+                    <button id="create-calendar-btn" type="reset" class="btn btn-secondary" data-toggle="modal"
+                        data-target="#createCalendarModal">
+                        + Create Calendar
+                    </button>
+
+                    <!-- Create Calendar Modal -->
+                    <div class="modal fade" id="createCalendarModal" tabindex="-1" role="dialog"
+                        aria-labelledby="createCalendarModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="createCalendarModalLabel">Calendar Details</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <form id="calendar-details" class="create-calendar-needs-validation" novalidate>
+
+                                        <!-- File name Input -->
+                                        <div class="form-row mb-3">
+                                            <label for="filename">File name</label>
+                                            <div class="input-group">
+                                                <input id="filename" name="fileprefix" type="text" class="form-control"
+                                                    placeholder="File name" required>
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text" id="basic-addon2">.ics</span>
+                                                </div>
+                                                <div class="invalid-feedback" id="filename-error">
+                                                    Please enter a filename (must not exist already).
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Version Input -->
+                                        <div class="form-row mb-3">
+                                            <label for="version">Version</label>
+                                            <input type="number" min="0" class="form-control" id="version"
+                                                placeholder="e.g. 2.0" name="version" required>
+                                            <div class="invalid-feedback">
+                                                Please enter a version.
+                                            </div>
+                                        </div>
+
+                                        <!-- Product ID Input -->
+                                        <div class="form-row mb-3">
+                                            <label for="prodID">Product ID</label>
+                                            <div class="input-group">
+                                                <textarea maxlength="999"
+                                                    placeholder="e.g. -//hacksw/handcal//NONSGML v1.0//EN"
+                                                    class="form-control" id="prodID" name="prodID" required></textarea>
+                                                <div class="invalid-feedback">
+                                                    Please enter a product ID (max length 999 characters).
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <h5>Event Details</h5>
+                                        <hr>
+
+                                        <!-- UID input -->
+                                        <div class="form-row mb-3">
+                                            <label for="UID">UID</label>
+                                            <div class="input-group">
+                                                <textarea maxlength="999" placeholder="e.g. uid1@example.com"
+                                                    class="form-control" id="UID" name="UID" required></textarea>
+                                                <div class="invalid-feedback">
+                                                    Please enter a UID (max length 999 characters).
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- CreationDateTime -->
+                                        <div class="form-row">
+                                            <!-- Creation Date Input -->
+                                            <div class="col-md-4 mb-1">
+                                                <label for="creationDateA">Creation Date</label>
+                                                <div class="input-group mb-3">
+                                                    <input max="9999-12-31" type="date" class="form-control"
+                                                        id="creationDateA" name="creationDate" required>
+                                                    <div class="invalid-feedback">
+                                                        Please select a valid creation date (01-01-0000 to 12-31-9999).
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Creation Time Input -->
+                                            <div class="col-md-4 mb-1">
+                                                <label for="creationTimeA">Creation Time</label>
+                                                <input type="time" value="00:00" class="form-control" id="creationTimeA"
+                                                    name="creationTime" required>
+                                                <div class="invalid-feedback">
+                                                    Please enter a creation time.
+                                                </div>
+                                            </div>
+
+                                            <!-- UTC Check Box for CreationDateTime -->
+                                            <div class="mt-5 col-auto">
+                                                <div class="form-check mb-2">
+                                                    <div class="custom-control custom-checkbox">
+                                                        <input type="checkbox" class="custom-control-input"
+                                                            id="customCheck1" name="creationUTC">
+                                                        <label class="custom-control-label"
+                                                            for="customCheck1">UTC</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- StartDateTime -->
+                                        <div class="form-row">
+                                            <!-- Start Date Input -->
+                                            <div class="col-md-4 mb-1">
+                                                <label for="startDateA">Start Date</label>
+                                                <div class="input-group mb-3">
+                                                    <input max="9999-12-31" type="date" class="form-control"
+                                                        id="startDateA" name="startDate" required>
+                                                    <div class="invalid-feedback">
+                                                        Please select a valid start date (01-01-0000 to 12-31-9999).
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Start Time Input -->
+                                            <div class="col-md-4 mb-1">
+                                                <label for="startTimeA">Start Time</label>
+                                                <input type="time" value="00:00" class="form-control" id="startTimeA"
+                                                    name="startTime" required>
+                                                <div class="invalid-feedback">
+                                                    Please enter a start time.
+                                                </div>
+                                            </div>
+
+                                            <!-- UTC Check Box for StartDateTime -->
+                                            <div class="mt-5 col-auto">
+                                                <div class="form-check mb-2">
+                                                    <div class="custom-control custom-checkbox">
+                                                        <input type="checkbox" class="custom-control-input"
+                                                            id="customCheck2" name="startUTC">
+                                                        <label class="custom-control-label"
+                                                            for="customCheck2">UTC</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                        <!-- Summary Input-->
+                                        <div class="mb-3">
+                                            <label for="validationSummaryA">Summary</label>
+                                            <textarea placeholder="Optional" class="form-control"
+                                                aria-label="With textarea" id="validationSummaryA"
+                                                name="summary"></textarea>
+                                        </div>
+
+                                        <!-- Close and Create Calendar Btn -->
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-dismiss="modal">Close</button>
+                                            <button class="btn btn-primary" id="form-create-calendar-btn"
+                                                type="submit">Create Calendar</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Event Modal Trigger -->
+                    <button type="reset" id="add-event" class="btn btn-secondary" data-toggle="modal"
+                        data-target="#addEventModal">
+                        + Add Event
+                    </button>
+
+                    <!-- Add Event Modal -->
+                    <div class="modal fade" id="addEventModal" tabindex="-1" role="dialog"
+                        aria-labelledby="addEventModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="addEventModalLabel">Add Event</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="add-event-details" class="add-event-needs-validation" novalidate>
+                                        <!-- Add Event Select Calendar-->
+
+                                        <div class=form-group>
+                                            <label for="input-add-event-cal-select">Calendar File</label>
+                                            <div class="input-group mb-3">
+                                                <input type="text" class="form-control input-group"
+                                                    aria-label="Text input with dropdown button"
+                                                    id="input-add-event-cal-select" name="filename" readonly required>
+
+                                                <!-- Add a fake select calendar input to all validating to work-->
+                                                <input type="text" class="form-control input-group"
+                                                    aria-label="Text input with dropdown button"
+                                                    id="fake-input-add-event-cal-select" required>
+
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-secondary dropdown-toggle"
+                                                        type="button" data-toggle="dropdown" aria-haspopup="true"
+                                                        aria-expanded="false" aria-required="true">Select
+                                                        Calendar</button>
+                                                    <div class="dropdown-menu" id="dropdown-add-event">
+                                                    </div>
+                                                </div>
+                                                <div class="invalid-feedback">
+                                                    Please select a calendar.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Add Event UID-->
+                                        <div class="form-group mb-3">
+                                            <label for="UIDE">UID</label>
+                                            <textarea maxlength="999" placeholder="e.g. uid1@example.com"
+                                                class="form-control" aria-label="With textarea" id="UIDE" name="UID"
+                                                required></textarea>
+                                            <div class="invalid-feedback">
+                                                Please enter a UID (max length 999 characters).
+                                            </div>
+                                        </div>
+
+                                        <!-- CreationDateTime -->
+                                        <div class="form-row">
+                                            <!-- Creation Date Input -->
+                                            <div class="col-md-4 mb-1">
+                                                <label for="creationDateE">Creation Date</label>
+                                                <div class="input-group mb-3">
+                                                    <input max="9999-12-31" type="date" class="form-control"
+                                                        id="creationDateE" name="creationDate" required>
+                                                    <div class="invalid-feedback">
+                                                        Please select a valid creation date (01-01-0000 to 12-31-9999).
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Creation Time Input -->
+                                            <div class="col-md-4 mb-1">
+                                                <label for="creationTimeE">Creation Time</label>
+                                                <input type="time" value="00:00" class="form-control" id="creationTimeE"
+                                                    name="creationTime" required>
+                                                <div class="invalid-feedback">
+                                                    Please enter a creation time.
+                                                </div>
+                                            </div>
+
+                                            <!-- UTC Check Box for CreationDateTime -->
+                                            <div class="mt-5 col-auto">
+                                                <div class="form-check mb-2">
+                                                    <div class="custom-control custom-checkbox">
+                                                        <input type="checkbox" class="custom-control-input"
+                                                            id="customCheck3" name="creationUTC">
+                                                        <label class="custom-control-label"
+                                                            for="customCheck3">UTC</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- StartDateTime -->
+                                        <div class="form-row">
+                                            <!-- Start Date Input -->
+                                            <div class="col-md-4 mb-1">
+                                                <label for="startDateE">Start Date</label>
+                                                <div class="input-group mb-3">
+                                                    <input max="9999-12-31" type="date" class="form-control"
+                                                        id="startDateE" name="startDate" required>
+                                                    <div class="invalid-feedback">
+                                                        Please select a valid start date (01-01-0000 to 12-31-9999).
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Start Time Input -->
+                                            <div class="col-md-4 mb-1">
+                                                <label for="startTimeE">Start Time</label>
+                                                <input type="time" value="00:00" class="form-control" id="startTimeE"
+                                                    name="startTime" required>
+                                                <div class="invalid-feedback">
+                                                    Please enter a start time.
+                                                </div>
+                                            </div>
+
+                                            <!-- UTC Check Box for StartDateTime -->
+                                            <div class="mt-5 col-auto">
+                                                <div class="form-check mb-2">
+                                                    <div class="custom-control custom-checkbox">
+                                                        <input type="checkbox" class="custom-control-input"
+                                                            id="customCheck4" name="startUTC">
+                                                        <label class="custom-control-label"
+                                                            for="customCheck4">UTC</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Summary Input-->
+                                        <div class="mb-3">
+                                            <label for="validationSummaryE">Summary</label>
+                                            <textarea placeholder="Optional" class="form-control"
+                                                aria-label="With textarea" id="validationSummaryE"
+                                                name="summary"></textarea>
+                                        </div>
+
+
+                                        <!-- Close and Add Event Button -->
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-dismiss="modal">Close</button>
+                                            <button class="btn btn-secondary" type="reset">Clear</button>
+
+                                            <button class="btn btn-primary" id="form-add-event-button"
+                                                type="submit">+Add Event</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Select Calendar for Calendar Panel -->
+                    <div class="btn-group dropdown" id="select-calendar-btn">
+                        <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            Select Calendar
+                        </button>
+                        <div id="dropdown-menu" class="dropdown-menu mw-25" aria-labelledby="dropdownMenu2">
+                        </div>
+                    </div>
+                </div>
+            </span>
+        </div>
+
+        <hr>
+        <div class="row panel">
+
+            <div class="col-12">
+
+                <!-- Details of Calendar User is viewing, so File name, Version and Product ID -->
+                <div class="form-row">
+
+                    <!-- File name -->
+                    <div class="input-group col-md-4 mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-info text-white" id="inputGroup-sizing-default">&nbsp;File
+                                name</span>
+                        </div>
+                        <input type="text" class="form-control cal-view-header-file" aria-label="Sizing example input"
+                            aria-describedby="inputGroup-sizing-default" readonly>
+                    </div>
+
+                    <!-- version -->
+                    <div class="input-group col-md-2 mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-info text-white id="
+                                inputGroup-sizing-default">&nbsp;&nbsp;Version
+                                &nbsp;&nbsp;</span>
+                        </div>
+                        <input type="text" class="form-control cal-view-header-version"
+                            aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" readonly>
+                    </div>
+                </div>
+
+                <!-- Product ID -->
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-info text-white" id="inputGroup-sizing-default">Product
+                            ID</span>
+                    </div>
+                    <textarea maxlength="999" class="form-control cal-view-header-prodID"
+                        aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default"
+                        readonly></textarea>
+                </div>
+
+                <!-- Calendar View Table -->
+                <div class="table-responsive calViewTable">
+                    <table class="table cal-view table-hover" data-toggle="table" data-striped="true" data-search="true"
+                        data-show-toggle="true" data-mobile-responsive="true">
+                        <thead class="thead-light sticky">
+                            <tr class="cal-header">
+                                <th scope="col">Event No</th>
+                                <th scope="col">Start date</th>
+                                <th scope="col">Start time</th>
+                                <th scope="col">Summary</th>
+                                <th scope="col">No. of Props</th>
+                                <th scope="col">No. of Alarms</th>
+                            </tr>
+                        </thead>
+                        <!-- Calendar View Table Body -->
+                        <tbody id="calViewBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Properties View Panel -->
+        <div class="row panel">
+            <div class="w-50">
+                <span>
+                    <p class="h4 font-weight-bold">Properties</p>
+                </span>
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table ">
+                            <thead class="thead-light sticky">
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Description</th>
+                                </tr>
+                            </thead>
+                            <!-- Properties Table Body -->
+                            <tbody id="table-event-properties">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-50">
+                <span>
+                    <p class="h4 font-weight-bold">Alarms</p>
+                </span>
+                <!-- Alarms View Table -->
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="thead-light sticky">
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Action</th>
+                                    <th scope="col">Trigger</th>
+                                    <th scope="col">No. of Props</th>
+                                </tr>
+                            </thead>
+                            <!-- Alarms Table Body -->
+                            <tbody id="table-event-alarms">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Database section -->
+        <div class="parent">
+            <!-- Database View Header and other related buttons -->
+            <span><p id="databaseSectionTitle" class="h3 font-weight-bold">Database View</p></span>
+            <span> <button class="btn btn-warning" type="button" id="clear-status-list">Clear All</button> </span>
+        </div>
+
+        <hr>
+        <!-- Status List -->
+        <!-- <div class="row panel">
+            <div class="col-12">
+                <div class="table-responsive status-panel bg-light " id="status-panel">
+                    <ul class="list-group" id="status-list">
+                    </ul>
+                </div>
+            </div>
+        </div> -->
+
+    </div>
+
+    <!-- Leave me at the bottom of body -->
+    <script src="/index.js"></script>
+</body>
+
+</html>

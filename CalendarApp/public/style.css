@@ -1,0 +1,170 @@
+:root {
+    --table_width: 100%;
+    --table_min_height: 100px;
+    --table_max_height: 200px;
+}
+
+html {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    margin: 0 auto;
+    font-size: 16px;
+    background-color: #dfe6e9;
+}
+
+body {
+    height: 100%;
+    min-height: 100%;
+    line-height: 1.75;
+    background-color: #dfe6e9;
+    width: 100%;
+}
+
+/* Jumbotron */
+.myJumbotron {
+    margin-left: 400px;
+}
+
+.jumbotron {
+    background-color: #9dc1d0;
+}
+
+/* container */
+.container {
+    min-height: 100vh;
+    margin-top: 100px;
+    margin-bottom: 100px;
+}
+
+/* panels */
+.panel {
+    margin: 0px auto 50px auto;
+}
+
+.status-panel {
+    max-height: 220px !important;
+}
+
+
+/* table stuff */
+
+thead th {
+    position: sticky;
+    position: -webkit-sticky;
+    top: 0;
+    z-index: 10;
+    text-align: center;
+}
+
+thead {
+    background-color: #9c88ff !important;
+}
+
+
+td {
+    text-align: center;
+    white-space: wrap;
+    max-height: 100px;
+}
+
+.table-body {
+    max-height: 500px;
+    overflow: auto;
+    width: 100%;
+}
+
+.table-responsive {
+    width: 100%;
+    height: 191px;
+    max-height: 210px;
+}
+
+/* card  */
+
+.card {
+    width: 100%;
+}
+
+
+.cal-view-card {
+    padding: 0px 0px 0px 0px;
+}
+
+.card-body {
+    max-height: 100px;
+}
+
+/* panel header */
+.parent {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+/* button */
+.upload-btn {
+    visibility: hidden;
+}
+  
+.list-group li {
+    text-align: start;
+}
+
+/* calendar */
+.cal-select {
+    display: none;
+}
+
+.cal-header {
+    white-space: nowrap;
+}
+
+/* hidden input */
+#fake-input-add-event-cal-select {
+    display: none;
+}
+
+/* Database */
+
+/* hidden login button */
+#loginBtn {
+    display: none;
+}
+
+#logoutBtn {
+    display: none;
+}
+
+a:link:hover {
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    text-decoration: underline;
+    cursor: pointer;
+    cursor: hand;
+}
+
+input[type=submit], button {
+    cursor: pointer;
+    cursor: hand;
+}
+
+@media(max-width: 900px) {
+    html {
+        font-size: 14px !important;
+        width: 80% !important;
+    }
+}
+@media(max-width: 480px) {
+    html {
+        font-size: 12px !important;
+        width: 90% !important;
+    }
+}
+@media(max-width: 320px) {
+    html {
+        font-size: 12px !important;
+        width: 100% !important;
+    }
+}
