@@ -310,28 +310,31 @@ app.get('/connectDatabase', function (req, res) {
 	});
 
 	connection.connect(function(err) {
+		// If error reprompt user for credentials
 		if(err) {
 			res.send( getErrorMessage(-1, "Error Connecting! Please try again.") );
 		}
+		// else success and create tables if needed.
 		else {
 			res.send( getErrorMessage(1, "Connected to database: " + data.database) );
+			tablesToCreate();
 		}
 	});
 });
 
-// login/connect to Database.
+// logouts out user and disconnects from database
 app.get('/disconnectDatabase', function (req, res) {
 	connection.end();
 	res.send( getErrorMessage(1, "Disconnected database and logged out.") );
 });
 
+// creates tables for user if they do not exist
 function tablesToCreate() {
 	var fileTable = "CREATE TABLE FILE ("
 	+ "cal_id INT AUTO_INCREMENT PRIMARY KEY,"
 	+ "file_Name VARCHAR(60) NOT NULL,"
 	+ "version INT NOT NULL,"
-	+ "prod_id VARCHAR(256) NOT NULL"
-	+ ")";
+	+ "prod_id VARCHAR(256) NOT NULL)";
 
 	createTable(fileTable);
 
@@ -342,29 +345,54 @@ function tablesToCreate() {
 	+ "location VARCHAR(60),"
 	+ "organizer VARCHAR(256),"
 	+ "cal_file INT NOT NULL,"
-	+ " FOREIGN KEY(cal_file) REFERENCES FILE(cal_id) ON DELETE CASCADE)";
+	+ "FOREIGN KEY(cal_file) REFERENCES FILE(cal_id) ON DELETE CASCADE)";
 
 	createTable(eventTable);
 
 	var alarmTable = "CREATE TABLE ALARM ("
 	+ "alarm_id INT AUTO_INCREMENT PRIMARY KEY,"
 	+ "action VARCHAR(256) NOT NULL,"
-	+ "trigger VARCHAR(256) NOT NULL,"
+	+ "`trigger` VARCHAR(256) NOT NULL,"
 	+ "event INT NOT NULL,"
-	+ " FOREIGN KEY(event) REFERENCES EVENT(event_id) ON DELETE CASCADE)";
+	+ "FOREIGN KEY(event) REFERENCES EVENT(event_id) ON DELETE CASCADE)";
 
 	createTable(alarmTable);
 }
 
+// creates FILE, EVENT and ALARM tables, if they exist good, else print error if something else went wrong.
 function createTable(sql) {
 	connection.query(sql, function(err, result) {
-		if(err){
-			console.log(err);
-		}
-		else {
-			console.log("Table created");
+		// if error code does not equal TABLE_EXISTS_ERROR then table is created, and or it already exists
+		if(err) {
+			if(err.code !== "ER_TABLE_EXISTS_ERROR"){
+				console.log("Something went wrong: " + err);
+			}
 		}
 	});
+}
+
+//store all files to database endpoint request
+app.get('/storeAllFiles', function (req, res) {
+	var data = req.query.validFiles;
+
+	var i = 0;
+	for(i in data){
+		checkIfFileExists(data[i]);
+	}
+});
+
+function checkIfFileExists(file){
+	console.log(file);
+	var sql = "SELECT * FROM FILE WHERE file_Name = '" + file.filename + "'";
+	connection.query(sql, function(err, result) {
+		// if error code does not equal TABLE_EXISTS_ERROR then table is created, and or it already exists
+		if(err) {
+			console.log("Something went wrong. "+err);
+		}
+		else if( result.length === 0 ) { // file does not exist so insert file data
+			 
+		}
+	}); // Search if file exists return;
 }
 
 

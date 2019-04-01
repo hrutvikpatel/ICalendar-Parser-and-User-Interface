@@ -38,7 +38,8 @@
 
         <div class="btn-group float-right mb-5" role="group" aria-label="Basic example">
             <!-- Login Button trigger modal -->
-            <button id="loginBtn" type="button" class="btn btn-primary" data-toggle="modal" data-target="#loginModal" data-backdrop="static" data-keyboard="false">
+            <button id="loginBtn" type="button" class="btn btn-primary" data-toggle="modal" data-target="#loginModal"
+                data-backdrop="static" data-keyboard="false">
                 &nbsp;Login&nbsp;
             </button>
 
@@ -190,7 +191,7 @@
                                             <label for="filename">File name</label>
                                             <div class="input-group">
                                                 <input id="filename" name="fileprefix" type="text" class="form-control"
-                                                    placeholder="File name" required>
+                                                    placeholder="File name" max="55" required>
                                                 <div class="input-group-append">
                                                     <span class="input-group-text" id="basic-addon2">.ics</span>
                                                 </div>
@@ -615,8 +616,12 @@
         <!-- Database section -->
         <div class="parent">
             <!-- Database View Header and other related buttons -->
-            <span><p id="databaseSectionTitle" class="h3 font-weight-bold">Database View</p></span>
-            <span> <button class="btn btn-warning" type="button" id="clear-status-list">Clear All</button> </span>
+            <span>
+                <p id="databaseSectionTitle" class="h3 font-weight-bold">Database View</p>
+            </span>
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button id="storeAllFilesBtn" type="button" class="btn btn-secondary">Store All Files</button>
+            </div>
         </div>
 
         <hr>

@@ -23,7 +23,8 @@ var json = new JSON();
 $(document).ready(function () {
     // On page-load AJAX Example
 
-    updateFileLogPanel();
+    // this was removed temporarily.
+    // updateFileLogPanel();
 
     // upload file
     $('#uploadFile').click(function (e) {
@@ -197,6 +198,30 @@ $(document).ready(function () {
         });
     });
 
+    // store all files to database tables
+    $('#storeAllFilesBtn').click(function(e) {
+        // get list of all valid files from json
+        let validFiles = [];
+        let i = 0;
+        for(i in json.allCal) {
+            if(json.allCal[i].status === 0) {
+                validFiles.push(json.allCal[i]);
+            }
+        }
+        console.log(validFiles);
+        $.ajax({
+            url: '/storeAllFiles',
+            type: 'get',
+            data: {validFiles: validFiles},
+            success: function (data) {
+                appendStatus(data.status, data.message);
+            },
+            fail: function (error) {
+                appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
+            }
+        });
+    });
+
     // form validation for add event
     var addEventForm = document.getElementsByClassName('add-event-needs-validation');
 
@@ -295,7 +320,6 @@ $(document).ready(function () {
                         // update all and append status
                         updateFileLogPanel();
                         appendStatus(data.status, data.message);
-                        console.log(data.status);
                         $('#loginModal').modal('hide');
                         if( data.status < 0 ) {
                             setTimeout(loginModal, 1000);
@@ -386,12 +410,23 @@ function updateFileLogPanel() {
                 // document.getElementById("add-event").disabled = true;
                 $('#add-event').hide();
                 $('#select-calendar-btn').hide();
+                $('#storeAllFilesBtn').hide();
                 appendStatus(0, "Sorry you cannot add an event at the moment. There are no iCalendar Files to add an event to!");
             }
             else { // else enable it
                 // document.getElementById("add-event").disabled = false;
                 $('#add-event').show();
                 $('#select-calendar-btn').show();
+
+                var i = 0;
+                var atLeastOneValidFile = false;
+                for( i in json.allCal) {
+                    if(json.allCal[i].status === 0){
+                        atLeastOneValidFile = true;
+                    }
+                }
+                if(atLeastOneValidFile) $('#storeAllFilesBtn').show();
+                else $('#storeAllFilesBtn').hide();
             }
 
             fileLogPanelRow(data);
