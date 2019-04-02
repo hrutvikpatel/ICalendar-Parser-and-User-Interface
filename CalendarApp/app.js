@@ -390,10 +390,12 @@ app.get('/storeAllFiles', function (req, res) {
 					"filename": filenames[i],
 					"calToJSON": JSON.parse(fileJSON)
 				};
+				// only valid files are allowed to be added to the database
 				if(newJSON.status === 0) {
 					data.push(newJSON)
 				}
 			}
+			// add files that do not exist in the database
 			var i = 0;
 			for (i in data) {
 				checkIfFileExists(data[i]);
@@ -405,6 +407,7 @@ app.get('/storeAllFiles', function (req, res) {
 	});
 });
 
+// if file does not exist add file to database
 function checkIfFileExists(file) {
 	connection.query("SELECT * FROM FILE WHERE file_Name = '" + file.filename + "'", function (err, result) {
 		// if error code does not equal TABLE_EXISTS_ERROR then table is created, and or it already exists
@@ -417,6 +420,7 @@ function checkIfFileExists(file) {
 	}); // end of checking if file name exists
 }
 
+// insert new file into FILE table
 function insertFile(file) {
 	connection.query("INSERT INTO FILE(file_Name, version, prod_id) VALUES ('" + file.filename + "'," + file.calToJSON.version + ",'" + file.calToJSON.prodID + "')", function (err, result) {
 		if (err) {
@@ -433,10 +437,13 @@ function insertFile(file) {
 	}); // end of inserting new file into FILE TABLE
 }
 
+// inserts an event into the EVENT table
 function insertEvent(cal_id, event) {
+	// get descriptions of properties and format startDateTime for database
 	var location = getPropertyDescriptionFromList("location", event.properties);
 	var organizer = getPropertyDescriptionFromList("organizer", event.properties);
 	var start_time = formatStartTimeForDB(event.startDateTime);
+	//query
 	connection.query("INSERT INTO EVENT(summary, start_time, location, organizer, cal_file) VALUES" 
 	+ "('" + event.summary + "','" + start_time + "','" + location+ "','" + organizer + "'," + cal_id + ")", function (err, result) {
 		if (err) {
@@ -453,6 +460,7 @@ function insertEvent(cal_id, event) {
 	}); // end of inserting new event into EVENT TABLE
 }
 
+// inserts an alarm into ALARM table
 function insertAlarm(event_id, alarm) {
 	connection.query("INSERT INTO ALARM(action, `trigger`, event) VALUES" 
 	+ "('" + alarm.action + "','" + alarm.trigger + "'," + event_id + ")", function (err, result) {
@@ -462,25 +470,38 @@ function insertAlarm(event_id, alarm) {
 	}); // end of inserting new alarm into ALARM TABLE
 }
 
-// return date.substring(0, 4) + "/" + date.substring(4, 6) + "/" + date.substring(6, 8);
+// format startDateTime struct into a format for MYSQL database
 function formatStartTimeForDB(DT) {
 	var newFormat = DT.date.substring(0,4)+"-"+DT.date.substring(4,6)+"-"+DT.date.substring(6,8)+"T"+
 		DT.time.substring(0,2)+":"+DT.time.substring(2,4)+":"+DT.time.substring(4,6);
 	return newFormat;
 }
 
-// gets 
+// get property description from using property name
 function getPropertyDescriptionFromList(property, list) {
 	var i = 0;
-	if(list === undefined) return null;
+	if(list === undefined) return 'NULL';
 	for(i in list) {
 		if(list[i].name.toUpperCase() === property.toUpperCase()){
 			return list[i].description;
 		}
 	}
-	return null;
+	return 'NULL';
 }
 
+
+//store all files to database endpoint request
+app.get('/clearAllData', function (req, res) {
+	connection.query("DELETE FROM FILE", function (err, result) {
+		if (err) {
+			console.log("Something went wrong. " + err);
+			res.send( getErrorMessage(-1, "Something went wrong when querying the database.") );
+		}
+		else {
+			res.send( getErrorMessage(1, "Cleared All Data in Database.") );
+		}
+	}); // end of delete all table data query
+});
 
 
 app.listen(portNum);

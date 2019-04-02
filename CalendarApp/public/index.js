@@ -212,6 +212,19 @@ $(document).ready(function () {
         });
     });
 
+    $('#clearAllDataBtn').click(function(e){
+        $.ajax({
+            url: '/clearAllData',
+            type: 'get',
+            success: function (data) {
+                appendStatus(data.status, data.message);
+            },
+            fail: function (error) {
+                appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
+            }
+        });
+    });
+
     $('loginBtn').click(function(e){
         document.getElementById("login-form").reset();
     });
