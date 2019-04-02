@@ -373,7 +373,6 @@ function createTable(sql) {
 
 //store all files to database endpoint request
 app.get('/storeAllFiles', function (req, res) {
-
 	fs.readdir(__dirname + '/uploads', function (error, filenames) {
 		if (error == null) {
 
@@ -391,18 +390,25 @@ app.get('/storeAllFiles', function (req, res) {
 					"calToJSON": JSON.parse(fileJSON)
 				};
 				// only valid files are allowed to be added to the database
-				if(newJSON.status === 0) {
+				if (newJSON.status === 0) {
 					data.push(newJSON)
 				}
 			}
+
 			// add files that do not exist in the database
 			var i = 0;
 			for (i in data) {
 				checkIfFileExists(data[i]);
 			}
+
+			// timer set to let queries execute and then display database status.
+			setTimeout(function(e) {
+				res.send(getErrorMessage(1, "Stored files into database."));
+			}, 2000);
+
 		}
 		else {
-			console.log("Something went wrong: "+err);
+			console.log("Something went wrong: " + err);
 		}
 	});
 });
@@ -430,7 +436,7 @@ function insertFile(file) {
 			var cal_id = result.insertId;
 			var i = 0;
 			var events = file.calToJSON.events;
-			for(i in events) {
+			for (i in events) {
 				insertEvent(cal_id, events[i]);
 			}
 		}
@@ -444,61 +450,60 @@ function insertEvent(cal_id, event) {
 	var organizer = getPropertyDescriptionFromList("organizer", event.properties);
 	var start_time = formatStartTimeForDB(event.startDateTime);
 	//query
-	connection.query("INSERT INTO EVENT(summary, start_time, location, organizer, cal_file) VALUES" 
-	+ "('" + event.summary + "','" + start_time + "','" + location+ "','" + organizer + "'," + cal_id + ")", function (err, result) {
-		if (err) {
-			console.log("Something went wrong. " + err);
-		}
-		else {
-			var event_id = result.insertId;
-			var i = 0;
-			var alarms = event.alarms;
-			for(i in alarms) {
-				insertAlarm(event_id, alarms[i]);
+	connection.query("INSERT INTO EVENT(summary, start_time, location, organizer, cal_file) VALUES"
+		+ "('" + event.summary + "','" + start_time + "','" + location + "','" + organizer + "'," + cal_id + ")", function (err, result) {
+			if (err) {
+				console.log("Something went wrong. " + err);
 			}
-		}
-	}); // end of inserting new event into EVENT TABLE
+			else {
+				var event_id = result.insertId;
+				var i = 0;
+				var alarms = event.alarms;
+				for (i in alarms) {
+					insertAlarm(event_id, alarms[i]);
+				}
+			}
+		}); // end of inserting new event into EVENT TABLE
 }
 
 // inserts an alarm into ALARM table
 function insertAlarm(event_id, alarm) {
-	connection.query("INSERT INTO ALARM(action, `trigger`, event) VALUES" 
-	+ "('" + alarm.action + "','" + alarm.trigger + "'," + event_id + ")", function (err, result) {
-		if (err) {
-			console.log("Something went wrong. " + err);
-		}
-	}); // end of inserting new alarm into ALARM TABLE
+	connection.query("INSERT INTO ALARM(action, `trigger`, event) VALUES"
+		+ "('" + alarm.action + "','" + alarm.trigger + "'," + event_id + ")", function (err, result) {
+			if (err) {
+				console.log("Something went wrong. " + err);
+			}
+		}); // end of inserting new alarm into ALARM TABLE
 }
 
 // format startDateTime struct into a format for MYSQL database
 function formatStartTimeForDB(DT) {
-	var newFormat = DT.date.substring(0,4)+"-"+DT.date.substring(4,6)+"-"+DT.date.substring(6,8)+"T"+
-		DT.time.substring(0,2)+":"+DT.time.substring(2,4)+":"+DT.time.substring(4,6);
+	var newFormat = DT.date.substring(0, 4) + "-" + DT.date.substring(4, 6) + "-" + DT.date.substring(6, 8) + "T" +
+		DT.time.substring(0, 2) + ":" + DT.time.substring(2, 4) + ":" + DT.time.substring(4, 6);
 	return newFormat;
 }
 
 // get property description from using property name
 function getPropertyDescriptionFromList(property, list) {
 	var i = 0;
-	if(list === undefined) return 'NULL';
-	for(i in list) {
-		if(list[i].name.toUpperCase() === property.toUpperCase()){
+	if (list === undefined) return 'NULL';
+	for (i in list) {
+		if (list[i].name.toUpperCase() === property.toUpperCase()) {
 			return list[i].description;
 		}
 	}
 	return 'NULL';
 }
 
-
 // clears all data in database
 app.get('/clearAllData', function (req, res) {
 	connection.query("DELETE FROM FILE", function (err, result) {
 		if (err) {
 			console.log("Something went wrong. " + err);
-			res.send( getErrorMessage(-1, "Something went wrong when querying the database.") );
+			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
 		}
 		else {
-			res.send( getErrorMessage(1, "Cleared all data in the database.") );
+			res.send(getErrorMessage(1, "Cleared all data in the database."));
 		}
 	}); // end of delete all table data query
 });
@@ -511,25 +516,30 @@ app.get('/getDBStatus', function (req, res) {
 	connection.query("SELECT COUNT(*) AS cal_id FROM FILE", function (err, result) {
 		if (err) {
 			console.log("Something went wrong. " + err);
-			res.send( getErrorMessage(-1, "Something went wrong when querying the database.") );
+			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
 		}
 		else {
 			numFiles = result[0].cal_id;
 			connection.query("SELECT COUNT(*) AS event_id FROM EVENT", function (err, result) {
 				if (err) {
 					console.log("Something went wrong. " + err);
-					res.send( getErrorMessage(-1, "Something went wrong when querying the database.") );
+					res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
 				}
 				else {
 					numEvents = result[0].event_id;
 					connection.query("SELECT COUNT(*) AS event FROM ALARM", function (err, result) {
 						if (err) {
 							console.log("Something went wrong. " + err);
-							res.send( getErrorMessage(-1, "Something went wrong when querying the database.") );
+							res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
 						}
 						else {
 							numAlarms = result[0].event;
-							res.send( getErrorMessage(1, "Database has " + pluralizer(numFiles, "file") + ", " + pluralizer(numEvents, "event") + ", and " + pluralizer(numAlarms, "alarm") + ".") )
+							var data = {
+								status: 1,
+								message: "Database has " + pluralizer(numFiles, "file") + ", " + pluralizer(numEvents, "event") + ", and " + pluralizer(numAlarms, "alarm") + ".",
+								numFiles: numFiles
+							}
+							res.send(data);
 						}
 					}); // end of count query for number of alarms in ALARM table
 				}
@@ -538,12 +548,37 @@ app.get('/getDBStatus', function (req, res) {
 	}); // end of count query for number of files in FILE table
 });
 
+// pluralizes a word, depending on the count
 function pluralizer(count, toPluralize) {
-	if(count === 1) {
+	if (count === 1 || count === 0) {
 		return (count + " " + toPluralize);
 	}
-	return (count + " " + toPluralize +"s");
+	return (count + " " + toPluralize + "s");
 }
+
+// QUERIES
+// 1. SELECT * FROM EVENT ORDER BY start_time;
+// 2. SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time; <-- replace the file_Name with the file you want to search
+// 3. SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time;
+
+// gets Query 1
+app.get('/getQuery1', function (req, res) {
+	connection.query("SELECT * FROM EVENT ORDER BY start_time", function (err, result) {
+		if (err) {
+			console.log("Something went wrong. " + err);
+			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
+		}
+		else {
+			var data = {
+				status: 1,
+				message: "Displaying all events sorted by start date.",
+				result: result
+			};
+			console.log(data);
+			// res.send(data);
+		}
+	});
+});
 
 
 app.listen(portNum);

@@ -128,11 +128,7 @@ td {
 /* Database */
 
 /* hidden login button */
-#showDatabaseBtns {
-    display: none;
-}
-
-#logoutBtn {
+#storeAllFilesBtn, #displayDBStatusBtn, #querySelectBtn, #clearAllDataBtn, #clearAllBtns, #logoutBtn  {
     display: none;
 }
 

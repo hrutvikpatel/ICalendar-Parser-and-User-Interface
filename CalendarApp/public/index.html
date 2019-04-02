@@ -552,9 +552,9 @@
         </div>
 
         <!-- Database section -->
-        <div class="parent">
+        <div>
             <!-- Database View Header and other related buttons -->
-            <span class="d-inline">
+            <div class="parent">
                 <p id="databaseSectionTitle" class="h3 font-weight-bold">Database View</p>
 
                 <!-- Login Button trigger modal -->
@@ -618,25 +618,61 @@
                     </div>
                 </div>
                 <button id="logoutBtn" type="button" class="btn btn-danger">Logout</button>
+            </div>
 
-            </span>
-            <div class="btn-group" id="showDatabaseBtns" role="group" aria-label="Basic example">
+            <div class="btn-group" role="group">
                 <button id="displayDBStatusBtn" type="button" class="btn btn-success">Display DB Status</button>
                 <button id="clearAllDataBtn" type="button" class="btn btn-danger">Clear All Data</button>
                 <button id="storeAllFilesBtn" type="button" class="btn btn-primary">Store All Files</button>
+
+                <div class="btn-group dropright" id="querySelectBtn">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                        Select A Query
+                    </button>
+                    <div id="query-dropdown-menu" class="dropdown-menu mw-25">
+                        <button value="query1" class="dropdown-item" type="button">
+                            Display all events sorted by start date.
+                        </button>
+                        <button value="query2" class="dropdown-item" type="button">
+                            Display events from a specific file. This query fetches the start dates and summaries of all
+                            events.
+                        </button>
+                        <button value="query3" class="dropdown-item" type="button">
+                            Displays all events that might conflict with each other, becuase they happen at the same
+                            time.
+                        </button>
+                        <button value="query4" class="dropdown-item" type="button">
+                            To be decided on.
+                        </button>
+                        <button value="query5" class="dropdown-item" type="button">
+                            To be decided on.
+                        </button>
+                        <button value="query6" class="dropdown-item" type="button">
+                            To be decided on.
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
         <hr>
+        <!-- Query Choosen -->
+        <div class="input-group  mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text bg-info text-white" id="inputGroup-sizing-default">&nbsp;Query&nbsp;</span>
+            </div>
+            <input type="text" class="form-control query-label"  readonly>
+        </div>
         <!-- Status List -->
-        <!-- <div class="row panel">
+        <div class="row panel">
             <div class="col-12">
                 <div class="table-responsive status-panel bg-light " id="status-panel">
                     <ul class="list-group" id="status-list">
                     </ul>
                 </div>
             </div>
-        </div> -->
+        </div>
 
     </div>
 

@@ -205,6 +205,7 @@ $(document).ready(function () {
             type: 'get',
             success: function (data) {
                 appendStatus(data.status, data.message);
+                $('#displayDBStatusBtn').click();
             },
             fail: function (error) {
                 appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
@@ -212,26 +213,37 @@ $(document).ready(function () {
         });
     });
 
-    $('#clearAllDataBtn').click(function(e){
+    $('#clearAllDataBtn').click(function (e) {
         $.ajax({
             url: '/clearAllData',
             type: 'get',
             success: function (data) {
                 appendStatus(data.status, data.message);
+                $('#displayDBStatusBtn').click();
+                $('#clearAllDataBtn').show();
+                $('#querySelectBtn').show();
             },
             fail: function (error) {
                 appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
             }
         });
     });
-    
 
-    $('#displayDBStatusBtn').click(function(e){
+
+    $('#displayDBStatusBtn').click(function (e) {
         $.ajax({
             url: '/getDBStatus',
             type: 'get',
             success: function (data) {
                 appendStatus(data.status, data.message);
+                if (data.numFiles > 0) {
+                    $('#clearAllDataBtn').show();
+                    $('#querySelectBtn').show();
+                }
+                else {
+                    $('#clearAllDataBtn').hide();
+                    $('#querySelectBtn').hide();
+                }
             },
             fail: function (error) {
                 appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
@@ -239,8 +251,42 @@ $(document).ready(function () {
         });
     });
 
-    $('loginBtn').click(function(e){
+    $('loginBtn').click(function (e) {
         document.getElementById("login-form").reset();
+    });
+
+    // // adds file choose in add event modal to text box that is readonly
+    // $('#dropdown-add-event').on('click', '.dropdown-item', function (e) {
+    //     var filename = $(this).text();
+    //     $("#input-add-event-cal-select").val(filename);
+    //     $("#fake-input-add-event-cal-select").val(filename);
+    // });
+    $('#querySelectBtn').on('click', '.dropdown-item', function (e) {
+        var queryNum = $(this).val();
+
+        switch (queryNum) {
+            case "query1":
+                query1();
+                break;
+            // case "query2":
+            //     query2();
+            //     break;
+            // case "query3":
+            //     query3();
+            //     break;
+            // case "query4":
+            //     query4();
+            //     break;
+            // case "query5":
+            //     query5();
+            //     break;
+            // case "query6":
+            //     query6();
+            //     break;
+        }
+
+        if (queryNum === "query1") query1();
+        else if (qu)
     });
 
     // form validation for add event
@@ -348,7 +394,18 @@ $(document).ready(function () {
                             $('#logoutBtn').show();
                             $('#loginBtn').hide();
                             document.getElementById("login-form").reset();
-                            $('#showDatabaseBtns').show();
+                            $('#displayDBStatusBtn').show();
+                            $('#displayDBStatusBtn').click();
+
+                            var i = 0;
+                            var atLeastOneValidFile = false;
+                            for (i in json.allCal) {
+                                if (json.allCal[i].status === 0) {
+                                    atLeastOneValidFile = true;
+                                }
+                            }
+                            if (atLeastOneValidFile) $('#storeAllFilesBtn').show();
+                            else $('#storeAllFilesBtn').hide();
                         }
                     },
                     fail: function (error) {
@@ -369,7 +426,6 @@ function loginModal() {
     document.getElementById("login-form").reset();
     $('#loginBtn').click();
 }
-
 
 // checks if the file that the user wants to create already exists
 function checkIfFileNameIsTaken(name) {
@@ -433,22 +489,13 @@ function updateFileLogPanel() {
                 $('#add-event').hide();
                 $('#select-calendar-btn').hide();
                 $('#storeAllFilesBtn').hide();
+                $('#clearAllDataBtn').hide();
                 appendStatus(0, "Sorry you cannot add an event at the moment. There are no iCalendar Files to add an event to!");
             }
             else { // else enable it
                 // document.getElementById("add-event").disabled = false;
                 $('#add-event').show();
                 $('#select-calendar-btn').show();
-
-                var i = 0;
-                var atLeastOneValidFile = false;
-                for (i in json.allCal) {
-                    if (json.allCal[i].status === 0) {
-                        atLeastOneValidFile = true;
-                    }
-                }
-                if (atLeastOneValidFile) $('#storeAllFilesBtn').show();
-                else $('#storeAllFilesBtn').hide();
             }
 
             fileLogPanelRow(data);
@@ -673,4 +720,11 @@ function uploadFile() {
     xhr.open('POST', '/upload', true);
     xhr.send(formData);
     return false;
+}
+
+//Query Functions
+
+// query1: Displays all events sorted by start date.
+function query1() {
+
 }
