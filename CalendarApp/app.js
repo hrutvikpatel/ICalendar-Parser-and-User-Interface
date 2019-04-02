@@ -397,15 +397,21 @@ app.get('/storeAllFiles', function (req, res) {
 
 			// add files that do not exist in the database
 			var i = 0;
-			for (i in data) {
-				checkIfFileExists(data[i]);
+			var len = data.length;
+			if(len === 0) {
+				res.send(getErrorMessage(1, "There are no files that can be stored in the database at the moment."));
+				return;
 			}
-
-			// timer set to let queries execute and then display database status.
-			setTimeout(function(e) {
-				res.send(getErrorMessage(1, "Stored files into database."));
-			}, 2000);
-
+			else {
+				for (i in data) {
+					if(len === (+i+1)) {
+						checkIfFileExists(data[i], true, res);
+					}
+					else {
+						checkIfFileExists(data[i], false, res);
+					}
+				}
+			}
 		}
 		else {
 			console.log("Something went wrong: " + err);
@@ -414,20 +420,20 @@ app.get('/storeAllFiles', function (req, res) {
 });
 
 // if file does not exist add file to database
-function checkIfFileExists(file) {
+function checkIfFileExists(file, sendDataBool, res) {
 	connection.query("SELECT * FROM FILE WHERE file_Name = '" + file.filename + "'", function (err, result) {
 		// if error code does not equal TABLE_EXISTS_ERROR then table is created, and or it already exists
 		if (err) {
 			console.log("Something went wrong. " + err);
 		}
 		else if (result.length === 0) { // file does not exist so insert file data
-			insertFile(file);
+			insertFile(file, sendDataBool, res);
 		}
 	}); // end of checking if file name exists
 }
 
 // insert new file into FILE table
-function insertFile(file) {
+function insertFile(file , sendDataBool, res) {
 	connection.query("INSERT INTO FILE(file_Name, version, prod_id) VALUES ('" + file.filename + "'," + file.calToJSON.version + ",'" + file.calToJSON.prodID + "')", function (err, result) {
 		if (err) {
 			console.log("Something went wrong. " + err);
@@ -436,15 +442,21 @@ function insertFile(file) {
 			var cal_id = result.insertId;
 			var i = 0;
 			var events = file.calToJSON.events;
+			var len = events.length;
 			for (i in events) {
-				insertEvent(cal_id, events[i]);
+				if(len === (+i+1) && sendDataBool === true) {
+					insertEvent(cal_id, events[i], true, res);
+				}
+				else {
+					insertEvent(cal_id, events[i], false, res);
+				}
 			}
 		}
 	}); // end of inserting new file into FILE TABLE
 }
 
 // inserts an event into the EVENT table
-function insertEvent(cal_id, event) {
+function insertEvent(cal_id, event , sendDataBool, res) {
 	// get descriptions of properties and format startDateTime for database
 	var location = getPropertyDescriptionFromList("location", event.properties);
 	var organizer = getPropertyDescriptionFromList("organizer", event.properties);
@@ -459,29 +471,37 @@ function insertEvent(cal_id, event) {
 				var event_id = result.insertId;
 				var i = 0;
 				var alarms = event.alarms;
+				var len = alarms.length;
 				for (i in alarms) {
 					insertAlarm(event_id, alarms[i]);
+					if( (len === (+i+1) || len === 0) && sendDataBool === true) {
+						insertAlarm(event_id, alarms[i], true, res);
+					}
+					else {
+						insertAlarm(event_id, alarms[i], false, res);
+					}
 				}
 			}
 		}); // end of inserting new event into EVENT TABLE
 }
 
 // inserts an alarm into ALARM table
-function insertAlarm(event_id, alarm) {
+function insertAlarm(event_id, alarm , sendDataBool, res) {
 	connection.query("INSERT INTO ALARM(action, `trigger`, event) VALUES"
 		+ "('" + alarm.action + "','" + alarm.trigger + "'," + event_id + ")", function (err, result) {
 			if (err) {
 				console.log("Something went wrong. " + err);
+			}
+			else if( sendDataBool === true ) {
+				res.send(getErrorMessage(1, "Stored files into database."));
 			}
 		}); // end of inserting new alarm into ALARM TABLE
 }
 
 // format startDateTime struct into a format for MYSQL database
 function formatStartTimeForDB(DT) {
-	console.log(DT);
 	var newFormat = DT.date.substring(0, 4) + "-" + DT.date.substring(4, 6) + "-" + DT.date.substring(6, 8) + "T" +
 		DT.time.substring(0, 2) + ":" + DT.time.substring(2, 4) + ":" + DT.time.substring(4, 6);
-		console.log(newFormat);
 	return newFormat;
 }
 
