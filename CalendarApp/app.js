@@ -490,7 +490,7 @@ function getPropertyDescriptionFromList(property, list) {
 }
 
 
-//store all files to database endpoint request
+// clears all data in database
 app.get('/clearAllData', function (req, res) {
 	connection.query("DELETE FROM FILE", function (err, result) {
 		if (err) {
@@ -498,10 +498,52 @@ app.get('/clearAllData', function (req, res) {
 			res.send( getErrorMessage(-1, "Something went wrong when querying the database.") );
 		}
 		else {
-			res.send( getErrorMessage(1, "Cleared All Data in Database.") );
+			res.send( getErrorMessage(1, "Cleared all data in the database.") );
 		}
 	}); // end of delete all table data query
 });
+
+// gets database status
+app.get('/getDBStatus', function (req, res) {
+	var numFiles = 0;
+	var numEvents = 0;
+	var numAlarms = 0;
+	connection.query("SELECT COUNT(*) AS cal_id FROM FILE", function (err, result) {
+		if (err) {
+			console.log("Something went wrong. " + err);
+			res.send( getErrorMessage(-1, "Something went wrong when querying the database.") );
+		}
+		else {
+			numFiles = result[0].cal_id;
+			connection.query("SELECT COUNT(*) AS event_id FROM EVENT", function (err, result) {
+				if (err) {
+					console.log("Something went wrong. " + err);
+					res.send( getErrorMessage(-1, "Something went wrong when querying the database.") );
+				}
+				else {
+					numEvents = result[0].event_id;
+					connection.query("SELECT COUNT(*) AS event FROM ALARM", function (err, result) {
+						if (err) {
+							console.log("Something went wrong. " + err);
+							res.send( getErrorMessage(-1, "Something went wrong when querying the database.") );
+						}
+						else {
+							numAlarms = result[0].event;
+							res.send( getErrorMessage(1, "Database has " + pluralizer(numFiles, "file") + ", " + pluralizer(numEvents, "event") + ", and " + pluralizer(numAlarms, "alarm") + ".") )
+						}
+					}); // end of count query for number of alarms in ALARM table
+				}
+			}); // end of count query for number of events in EVENT table
+		}
+	}); // end of count query for number of files in FILE table
+});
+
+function pluralizer(count, toPluralize) {
+	if(count === 1) {
+		return (count + " " + toPluralize);
+	}
+	return (count + " " + toPluralize +"s");
+}
 
 
 app.listen(portNum);
