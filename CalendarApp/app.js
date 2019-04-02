@@ -478,8 +478,10 @@ function insertAlarm(event_id, alarm) {
 
 // format startDateTime struct into a format for MYSQL database
 function formatStartTimeForDB(DT) {
+	console.log(DT);
 	var newFormat = DT.date.substring(0, 4) + "-" + DT.date.substring(4, 6) + "-" + DT.date.substring(6, 8) + "T" +
 		DT.time.substring(0, 2) + ":" + DT.time.substring(2, 4) + ":" + DT.time.substring(4, 6);
+		console.log(newFormat);
 	return newFormat;
 }
 
@@ -574,12 +576,28 @@ app.get('/getQuery1', function (req, res) {
 				message: "Displaying all events sorted by start date.",
 				result: result
 			};
-			console.log(data);
-			// res.send(data);
+			res.send(data);
 		}
 	});
 });
 
+// gets Query 3
+app.get('/getQuery3', function (req, res) {
+	connection.query("SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time", function (err, result) {
+		if (err) {
+			console.log("Something went wrong. " + err);
+			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
+		}
+		else {
+			var data = {
+				status: 1,
+				message: " Displays all events that might conflict with each other, becuase they happen at the same time.",
+				result: result
+			};
+			res.send(data);
+		}
+	});
+});
 
 app.listen(portNum);
 console.log('Running app at localhost: ' + portNum);

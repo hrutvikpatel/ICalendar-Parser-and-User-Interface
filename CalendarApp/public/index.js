@@ -25,6 +25,8 @@ $(document).ready(function () {
 
     // this was removed temporarily.
     updateFileLogPanel();
+    // reset query label
+    $(".query-label").val("");
 
     // upload file
     $('#uploadFile').click(function (e) {
@@ -264,6 +266,10 @@ $(document).ready(function () {
     $('#querySelectBtn').on('click', '.dropdown-item', function (e) {
         var queryNum = $(this).val();
 
+        $("#query1-3-body").children().remove();
+        $(".query-label").val( $(this).html() );
+
+
         switch (queryNum) {
             case "query1":
                 query1();
@@ -271,9 +277,9 @@ $(document).ready(function () {
             // case "query2":
             //     query2();
             //     break;
-            // case "query3":
-            //     query3();
-            //     break;
+            case "query3":
+                query3();
+                break;
             // case "query4":
             //     query4();
             //     break;
@@ -284,9 +290,6 @@ $(document).ready(function () {
             //     query6();
             //     break;
         }
-
-        if (queryNum === "query1") query1();
-        else if (qu)
     });
 
     // form validation for add event
@@ -726,5 +729,74 @@ function uploadFile() {
 
 // query1: Displays all events sorted by start date.
 function query1() {
+    $.ajax({
+        url: '/getQuery1',
+        type: 'get',
+        success: function (data) {
+            appendStatus(data.status, data.message);
+            appendQuery1to3(data.result);
+        },
+        fail: function (error) {
+            appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
+        }
+    });
+}
 
+function query3() {
+    $.ajax({
+        url: '/getQuery3',
+        type: 'get',
+        success: function (data) {
+            appendStatus(data.status, data.message);
+            appendQuery1to3(data.result);
+        },
+        fail: function (error) {
+            appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
+        }
+    }); 
+}
+
+function appendQuery1to3( query ) {
+
+    var table = document.getElementById("query1-3-body");
+    var newRow, eventNo, summary, startTime, location, organizer;
+    // insert new row.
+
+    // add events to calendar view panel
+    for (i in query) {
+        newRow = table.insertRow(i);
+        eventNo = newRow.insertCell(0);
+        summary = newRow.insertCell(1);
+        startTime = newRow.insertCell(2);
+        location = newRow.insertCell(3);
+        organizer = newRow.insertCell(4);
+
+        // add event details 
+        eventNo.innerHTML = +i + 1;
+        summary.innerHTML = query[i].summary;
+        summary.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+        startTime.innerHTML =  "<p class=\"flex-nowrap\" style=\"white-space: nowrap\">" + parseStart_time(query[i].start_time) + "</p>";
+        location.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+        organizer.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+
+        if(query[i].location === "NULL") {
+            location.innerHTML = "--"
+        }
+        else {
+            location.innerHTML = query[i].location;
+        }
+
+        if(query[i].organizer === "NULL") {
+            organizer.innerHTML = "--"
+        }
+        else {
+            organizer.innerHTML = query[i].organizer;
+        }
+    }
+}
+
+// parses start_time from mysql database
+function parseStart_time(toParse) {
+    var parsed = toParse.substring(0,10) + " " + toParse.substring(11, 19);
+    return parsed;
 }
