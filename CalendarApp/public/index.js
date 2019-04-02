@@ -205,8 +205,10 @@ $(document).ready(function () {
         $.ajax({
             url: '/storeAllFiles',
             type: 'get',
-            success: function (data) {
+            success: function () {
                 appendStatus(data.status, data.message);
+                $("#query1-3-body").children().remove();
+                $(".query-label").val('');
                 $('#displayDBStatusBtn').click();
             },
             fail: function (error) {
@@ -224,6 +226,8 @@ $(document).ready(function () {
                 $('#displayDBStatusBtn').click();
                 $('#clearAllDataBtn').show();
                 $('#querySelectBtn').show();
+                $("#query1-3-body").children().remove();
+                $(".query-label").val('');
             },
             fail: function (error) {
                 appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
@@ -267,18 +271,24 @@ $(document).ready(function () {
         var queryNum = $(this).val();
 
         $("#query1-3-body").children().remove();
-        $(".query-label").val( $(this).html() );
+        $(".query-label").val($(this).html());
+
+        // QUERIES
+        // 1. SELECT * FROM EVENT ORDER BY start_time;
+        // 2. SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time; <-- replace the file_Name with the file you want to search
+        // 3. SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time;
 
 
         switch (queryNum) {
             case "query1":
-                query1();
+                query("SELECT * FROM EVENT ORDER BY start_time");
                 break;
             case "query2":
-                query2();
+                // get file that the user wants
+                query("SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time");
                 break;
             case "query3":
-                query3();
+                query("SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time");
                 break;
             // case "query4":
             //     query4();
@@ -728,10 +738,13 @@ function uploadFile() {
 //Query Functions
 
 // query1: Displays all events sorted by start date.
-function query1() {
+function query(sql) {
     $.ajax({
-        url: '/getQuery1',
+        url: '/getQuery',
         type: 'get',
+        data: {
+            sql: sql
+        },
         success: function (data) {
             appendStatus(data.status, data.message);
             appendQuery1to3(data.result);
@@ -742,37 +755,7 @@ function query1() {
     });
 }
 
-// query2: Displays all events sorted by start date.
-function query2() {
-    $('#query2Modal').modal('show');
-    $.ajax({
-        url: '/getQuery2',
-        type: 'get',
-        success: function (data) {
-            appendStatus(data.status, data.message);
-            appendQuery1to3(data.result);
-        },
-        fail: function (error) {
-            appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
-        }
-    });
-}
-
-function query3() {
-    $.ajax({
-        url: '/getQuery3',
-        type: 'get',
-        success: function (data) {
-            appendStatus(data.status, data.message);
-            appendQuery1to3(data.result);
-        },
-        fail: function (error) {
-            appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
-        }
-    }); 
-}
-
-function appendQuery1to3( query ) {
+function appendQuery1to3(query) {
 
     var table = document.getElementById("query1-3-body");
     var newRow, eventNo, summary, startTime, location, organizer;
@@ -791,18 +774,18 @@ function appendQuery1to3( query ) {
         eventNo.innerHTML = +i + 1;
         summary.innerHTML = query[i].summary;
         summary.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
-        startTime.innerHTML =  "<p class=\"flex-nowrap\" style=\"white-space: nowrap\">" + parseStart_time(query[i].start_time) + "</p>";
+        startTime.innerHTML = "<p class=\"flex-nowrap\" style=\"white-space: nowrap\">" + parseStart_time(query[i].start_time) + "</p>";
         location.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
         organizer.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
 
-        if(query[i].location === "NULL") {
+        if (query[i].location === "NULL") {
             location.innerHTML = "--"
         }
         else {
             location.innerHTML = query[i].location;
         }
 
-        if(query[i].organizer === "NULL") {
+        if (query[i].organizer === "NULL") {
             organizer.innerHTML = "--"
         }
         else {
@@ -813,6 +796,6 @@ function appendQuery1to3( query ) {
 
 // parses start_time from mysql database
 function parseStart_time(toParse) {
-    var parsed = toParse.substring(0,10) + " " + toParse.substring(11, 19);
+    var parsed = toParse.substring(0, 10) + " " + toParse.substring(11, 19);
     return parsed;
 }

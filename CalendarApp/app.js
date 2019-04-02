@@ -397,20 +397,8 @@ app.get('/storeAllFiles', function (req, res) {
 
 			// add files that do not exist in the database
 			var i = 0;
-			var len = data.length;
-			if(len === 0) {
-				res.send(getErrorMessage(1, "There are no files that can be stored in the database at the moment."));
-				return;
-			}
-			else {
-				for (i in data) {
-					if(len === (+i+1)) {
-						checkIfFileExists(data[i], true, res);
-					}
-					else {
-						checkIfFileExists(data[i], false, res);
-					}
-				}
+			for (i in data) {
+				checkIfFileExists(data[i]);
 			}
 		}
 		else {
@@ -420,20 +408,20 @@ app.get('/storeAllFiles', function (req, res) {
 });
 
 // if file does not exist add file to database
-function checkIfFileExists(file, sendDataBool, res) {
+function checkIfFileExists(file) {
 	connection.query("SELECT * FROM FILE WHERE file_Name = '" + file.filename + "'", function (err, result) {
 		// if error code does not equal TABLE_EXISTS_ERROR then table is created, and or it already exists
 		if (err) {
 			console.log("Something went wrong. " + err);
 		}
 		else if (result.length === 0) { // file does not exist so insert file data
-			insertFile(file, sendDataBool, res);
+			insertFile(file);
 		}
 	}); // end of checking if file name exists
 }
 
 // insert new file into FILE table
-function insertFile(file , sendDataBool, res) {
+function insertFile(file) {
 	connection.query("INSERT INTO FILE(file_Name, version, prod_id) VALUES ('" + file.filename + "'," + file.calToJSON.version + ",'" + file.calToJSON.prodID + "')", function (err, result) {
 		if (err) {
 			console.log("Something went wrong. " + err);
@@ -442,21 +430,15 @@ function insertFile(file , sendDataBool, res) {
 			var cal_id = result.insertId;
 			var i = 0;
 			var events = file.calToJSON.events;
-			var len = events.length;
 			for (i in events) {
-				if(len === (+i+1) && sendDataBool === true) {
-					insertEvent(cal_id, events[i], true, res);
-				}
-				else {
-					insertEvent(cal_id, events[i], false, res);
-				}
+				insertEvent(cal_id, events[i]);
 			}
 		}
 	}); // end of inserting new file into FILE TABLE
 }
 
 // inserts an event into the EVENT table
-function insertEvent(cal_id, event , sendDataBool, res) {
+function insertEvent(cal_id, event) {
 	// get descriptions of properties and format startDateTime for database
 	var location = getPropertyDescriptionFromList("location", event.properties);
 	var organizer = getPropertyDescriptionFromList("organizer", event.properties);
@@ -471,37 +453,29 @@ function insertEvent(cal_id, event , sendDataBool, res) {
 				var event_id = result.insertId;
 				var i = 0;
 				var alarms = event.alarms;
-				var len = alarms.length;
 				for (i in alarms) {
 					insertAlarm(event_id, alarms[i]);
-					if( (len === (+i+1) || len === 0) && sendDataBool === true) {
-						insertAlarm(event_id, alarms[i], true, res);
-					}
-					else {
-						insertAlarm(event_id, alarms[i], false, res);
-					}
 				}
 			}
 		}); // end of inserting new event into EVENT TABLE
 }
 
 // inserts an alarm into ALARM table
-function insertAlarm(event_id, alarm , sendDataBool, res) {
+function insertAlarm(event_id, alarm) {
 	connection.query("INSERT INTO ALARM(action, `trigger`, event) VALUES"
 		+ "('" + alarm.action + "','" + alarm.trigger + "'," + event_id + ")", function (err, result) {
 			if (err) {
 				console.log("Something went wrong. " + err);
-			}
-			else if( sendDataBool === true ) {
-				res.send(getErrorMessage(1, "Stored files into database."));
 			}
 		}); // end of inserting new alarm into ALARM TABLE
 }
 
 // format startDateTime struct into a format for MYSQL database
 function formatStartTimeForDB(DT) {
+	console.log(DT);
 	var newFormat = DT.date.substring(0, 4) + "-" + DT.date.substring(4, 6) + "-" + DT.date.substring(6, 8) + "T" +
 		DT.time.substring(0, 2) + ":" + DT.time.substring(2, 4) + ":" + DT.time.substring(4, 6);
+		console.log(newFormat);
 	return newFormat;
 }
 
@@ -583,9 +557,8 @@ function pluralizer(count, toPluralize) {
 // 2. SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time; <-- replace the file_Name with the file you want to search
 // 3. SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time;
 
-// gets Query 1
-app.get('/getQuery1', function (req, res) {
-	connection.query("SELECT * FROM EVENT ORDER BY start_time", function (err, result) {
+app.get('/getQuery', function (req, res) {
+	connection.query(req.query.sql, function (err, result) {
 		if (err) {
 			console.log("Something went wrong. " + err);
 			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
@@ -594,43 +567,6 @@ app.get('/getQuery1', function (req, res) {
 			var data = {
 				status: 1,
 				message: "Displaying all events sorted by start date.",
-				result: result
-			};
-			res.send(data);
-		}
-	});
-});
-
-
-// gets Query 1
-app.get('/getQuery2', function (req, res) {
-	connection.query("SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time", function (err, result) {
-		if (err) {
-			console.log("Something went wrong. " + err);
-			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
-		}
-		else {
-			var data = {
-				status: 1,
-				message: "Displaying all events sorted by start date.",
-				result: result
-			};
-			res.send(data);
-		}
-	});
-});
-
-// gets Query 3
-app.get('/getQuery3', function (req, res) {
-	connection.query("SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time", function (err, result) {
-		if (err) {
-			console.log("Something went wrong. " + err);
-			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
-		}
-		else {
-			var data = {
-				status: 1,
-				message: " Displays all events that might conflict with each other, becuase they happen at the same time.",
 				result: result
 			};
 			res.send(data);
