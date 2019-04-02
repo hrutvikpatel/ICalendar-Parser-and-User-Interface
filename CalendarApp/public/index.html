@@ -629,9 +629,33 @@
                     <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">Select A Query</button>
                     <div id="query-dropdown-menu" class="dropdown-menu mw-25">
-                        <button value="query1" class="dropdown-item" type="button">Display all events sorted by start date.</button>
+                        <button value="query1" class="dropdown-item" type="button">Display all events sorted by start
+                            date.</button>
                         <button value="query2" class="dropdown-item" type="button">Display events from a specific file. This query fetches the start dates and summaries of all events.</button>
-                        <button value="query3" class="dropdown-item" type="button">Displays all events that might conflict with each other, becuase they happen at the same time.</button>
+
+                        <div class="modal fade" id="query2Modal" tabindex="-1" role="dialog">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Modal title</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Modal body text goes here.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-dismiss="modal">Close</button>
+                                        <button type="button" class="btn btn-primary">Save changes</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button value="query3" class="dropdown-item" type="button">Displays all events that might
+                            conflict with each other, becuase they happen at the same time.</button>
                         <button value="query4" class="dropdown-item" type="button">To be decided on.</button>
                         <button value="query5" class="dropdown-item" type="button">To be decided on.</button>
                         <button value="query6" class="dropdown-item" type="button">To be decided on.</button>
@@ -644,27 +668,28 @@
         <!-- Query Choosen -->
         <div class="input-group  mb-3">
             <div class="input-group-prepend">
-                <span class="input-group-text bg-info text-white" id="inputGroup-sizing-default">&nbsp;Query&nbsp;</span>
+                <span class="input-group-text bg-info text-white"
+                    id="inputGroup-sizing-default">&nbsp;Query&nbsp;</span>
             </div>
-            <input type="text" class="form-control query-label"  readonly>
+            <input type="text" class="form-control query-label" readonly>
         </div>
         <div class="table-responsive query1-3">
-                <table class="table cal-view" data-toggle="table" data-striped="true" data-search="true"
-                    data-show-toggle="true" data-mobile-responsive="true">
-                    <thead class="thead-light sticky">
-                        <tr class="cal-header">
-                            <th scope="col">Event No</th>
-                            <th scope="col">Summary</th>
-                            <th scope="col">Start-Time</th>
-                            <th scope="col">Location</th>
-                            <th scope="col">Organizer</th>
-                        </tr>
-                    </thead>
-                    <!-- Calendar View Table Body -->
-                    <tbody id="query1-3-body">
-                    </tbody>
-                </table>
-            </div>
+            <table class="table cal-view" data-toggle="table" data-striped="true" data-search="true"
+                data-show-toggle="true" data-mobile-responsive="true">
+                <thead class="thead-light sticky">
+                    <tr class="cal-header">
+                        <th scope="col">Event No</th>
+                        <th scope="col">Summary</th>
+                        <th scope="col">Start-Time</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Organizer</th>
+                    </tr>
+                </thead>
+                <!-- Calendar View Table Body -->
+                <tbody id="query1-3-body">
+                </tbody>
+            </table>
+        </div>
 
     </div>
 

@@ -581,6 +581,25 @@ app.get('/getQuery1', function (req, res) {
 	});
 });
 
+
+// gets Query 1
+app.get('/getQuery2', function (req, res) {
+	connection.query("SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time", function (err, result) {
+		if (err) {
+			console.log("Something went wrong. " + err);
+			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
+		}
+		else {
+			var data = {
+				status: 1,
+				message: "Displaying all events sorted by start date.",
+				result: result
+			};
+			res.send(data);
+		}
+	});
+});
+
 // gets Query 3
 app.get('/getQuery3', function (req, res) {
 	connection.query("SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time", function (err, result) {

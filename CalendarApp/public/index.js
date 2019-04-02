@@ -274,9 +274,9 @@ $(document).ready(function () {
             case "query1":
                 query1();
                 break;
-            // case "query2":
-            //     query2();
-            //     break;
+            case "query2":
+                query2();
+                break;
             case "query3":
                 query3();
                 break;
@@ -731,6 +731,22 @@ function uploadFile() {
 function query1() {
     $.ajax({
         url: '/getQuery1',
+        type: 'get',
+        success: function (data) {
+            appendStatus(data.status, data.message);
+            appendQuery1to3(data.result);
+        },
+        fail: function (error) {
+            appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
+        }
+    });
+}
+
+// query2: Displays all events sorted by start date.
+function query2() {
+    $('#query2Modal').modal('show');
+    $.ajax({
+        url: '/getQuery2',
         type: 'get',
         success: function (data) {
             appendStatus(data.status, data.message);
