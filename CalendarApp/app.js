@@ -68,7 +68,7 @@ app.post('/upload', function (req, res) {
 			var filename = uploadFile.name;
 			var path = 'uploads/' + uploadFile.name;
 			var status = sharedLib.sharedValidateUploadedFile(path);
-			
+
 			if (status != 0) { // if status is not OK send error message
 				fs.unlinkSync(path);
 				return res.status(500).send(filename + " is an invalid ICalendar file. Upload stopped.")
@@ -303,20 +303,20 @@ app.get('/connectDatabase', function (req, res) {
 	var data = req.query;
 
 	connection = mysql.createConnection({
-		host		: 'dursley.socs.uoguelph.ca',
-		user		: data.username,
-		password	: data.password,
-		database	: data.database
+		host: 'dursley.socs.uoguelph.ca',
+		user: data.username,
+		password: data.password,
+		database: data.database
 	});
 
-	connection.connect(function(err) {
+	connection.connect(function (err) {
 		// If error reprompt user for credentials
-		if(err) {
-			res.send( getErrorMessage(-1, "Error Connecting! Please try again.") );
+		if (err) {
+			res.send(getErrorMessage(-1, "Error Connecting! Please try again."));
 		}
 		// else success and create tables if needed.
 		else {
-			res.send( getErrorMessage(1, "Connected to database: " + data.database) );
+			res.send(getErrorMessage(1, "Connected to database: " + data.database));
 			tablesToCreate();
 		}
 	});
@@ -325,46 +325,46 @@ app.get('/connectDatabase', function (req, res) {
 // logouts out user and disconnects from database
 app.get('/disconnectDatabase', function (req, res) {
 	connection.end();
-	res.send( getErrorMessage(1, "Disconnected database and logged out.") );
+	res.send(getErrorMessage(1, "Disconnected database and logged out."));
 });
 
 // creates tables for user if they do not exist
 function tablesToCreate() {
 	var fileTable = "CREATE TABLE FILE ("
-	+ "cal_id INT AUTO_INCREMENT PRIMARY KEY,"
-	+ "file_Name VARCHAR(60) NOT NULL,"
-	+ "version INT NOT NULL,"
-	+ "prod_id VARCHAR(256) NOT NULL)";
+		+ "cal_id INT AUTO_INCREMENT PRIMARY KEY,"
+		+ "file_Name VARCHAR(60) NOT NULL,"
+		+ "version INT NOT NULL,"
+		+ "prod_id VARCHAR(256) NOT NULL)";
 
 	createTable(fileTable);
 
 	var eventTable = "CREATE TABLE EVENT ("
-	+ "event_id INT AUTO_INCREMENT PRIMARY KEY,"
-	+ "summary VARCHAR(1024),"
-	+ "start_time DATETIME NOT NULL,"
-	+ "location VARCHAR(60),"
-	+ "organizer VARCHAR(256),"
-	+ "cal_file INT NOT NULL,"
-	+ "FOREIGN KEY(cal_file) REFERENCES FILE(cal_id) ON DELETE CASCADE)";
+		+ "event_id INT AUTO_INCREMENT PRIMARY KEY,"
+		+ "summary VARCHAR(1024),"
+		+ "start_time DATETIME NOT NULL,"
+		+ "location VARCHAR(60),"
+		+ "organizer VARCHAR(256),"
+		+ "cal_file INT NOT NULL,"
+		+ "FOREIGN KEY(cal_file) REFERENCES FILE(cal_id) ON DELETE CASCADE)";
 
 	createTable(eventTable);
 
 	var alarmTable = "CREATE TABLE ALARM ("
-	+ "alarm_id INT AUTO_INCREMENT PRIMARY KEY,"
-	+ "action VARCHAR(256) NOT NULL,"
-	+ "`trigger` VARCHAR(256) NOT NULL,"
-	+ "event INT NOT NULL,"
-	+ "FOREIGN KEY(event) REFERENCES EVENT(event_id) ON DELETE CASCADE)";
+		+ "alarm_id INT AUTO_INCREMENT PRIMARY KEY,"
+		+ "action VARCHAR(256) NOT NULL,"
+		+ "`trigger` VARCHAR(256) NOT NULL,"
+		+ "event INT NOT NULL,"
+		+ "FOREIGN KEY(event) REFERENCES EVENT(event_id) ON DELETE CASCADE)";
 
 	createTable(alarmTable);
 }
 
 // creates FILE, EVENT and ALARM tables, if they exist good, else print error if something else went wrong.
 function createTable(sql) {
-	connection.query(sql, function(err, result) {
+	connection.query(sql, function (err, result) {
 		// if error code does not equal TABLE_EXISTS_ERROR then table is created, and or it already exists
-		if(err) {
-			if(err.code !== "ER_TABLE_EXISTS_ERROR"){
+		if (err) {
+			if (err.code !== "ER_TABLE_EXISTS_ERROR") {
 				console.log("Something went wrong: " + err);
 			}
 		}
@@ -373,27 +373,124 @@ function createTable(sql) {
 
 //store all files to database endpoint request
 app.get('/storeAllFiles', function (req, res) {
-	var data = req.query.validFiles;
 
-	var i = 0;
-	for(i in data){
-		checkIfFileExists(data[i]);
-	}
+	fs.readdir(__dirname + '/uploads', function (error, filenames) {
+		if (error == null) {
+
+			let data = [];
+			var i = 0;
+			for (i in filenames) {
+				// create JSON for all files and save it into an array of calendar JSON
+				let dbPtrPtr = ref.alloc(calPtrPtr);
+				let status = sharedLib.createCalendar("./uploads/" + filenames[i], dbPtrPtr);
+				let fileCalPtr = dbPtrPtr.deref();
+				let fileJSON = sharedLib.calendarToJSON(fileCalPtr);
+				let newJSON = {
+					"status": status,
+					"filename": filenames[i],
+					"calToJSON": JSON.parse(fileJSON)
+				};
+				if(newJSON.status === 0) {
+					data.push(newJSON)
+				}
+			}
+			var i = 0;
+			for (i in data) {
+				checkIfFileExists(data[i]);
+			}
+		}
+		else {
+			console.log("Something went wrong: "+err);
+		}
+	});
 });
 
-function checkIfFileExists(file){
-	console.log(file);
-	var sql = "SELECT * FROM FILE WHERE file_Name = '" + file.filename + "'";
-	connection.query(sql, function(err, result) {
+function checkIfFileExists(file) {
+	connection.query("SELECT * FROM FILE WHERE file_Name = '" + file.filename + "'", function (err, result) {
 		// if error code does not equal TABLE_EXISTS_ERROR then table is created, and or it already exists
-		if(err) {
-			console.log("Something went wrong. "+err);
+		if (err) {
+			console.log("Something went wrong. " + err);
 		}
-		else if( result.length === 0 ) { // file does not exist so insert file data
-			 
+		else if (result.length === 0) { // file does not exist so insert file data
+			insertFile(file);
 		}
-	}); // Search if file exists return;
+	}); // end of checking if file name exists
 }
+
+function insertFile(file) {
+	connection.query("INSERT INTO FILE(file_Name, version, prod_id) VALUES ('" + file.filename + "'," + file.calToJSON.version + ",'" + file.calToJSON.prodID + "')", function (err, result) {
+		if (err) {
+			console.log("Something went wrong. " + err);
+		}
+		else {
+			console.log('Inserted new file into FILE TABLE... Now getting entry ID');
+			connection.query("SELECT cal_id FROM FILE WHERE file_Name = '" + file.filename + "'", function (err, result) {
+				if (err) {
+					console.log("Something went wrong. " + err);
+				}
+				else {
+					var cal_id = result[0].cal_id;
+					var i = 0;
+					var events = file.calToJSON.events;
+					for(i in events) {
+						insertEvent(cal_id, events[i]);
+					}
+				}
+			}); // end of getting cal_id;
+		}
+	}); // end of inserting new file into FILE TABLE
+}
+
+function insertEvent(cal_id, event) {
+	var location = getPropertyDescriptionFromList("location", event.properties);
+	var organizer = getPropertyDescriptionFromList("organizer", event.properties);
+	var start_time = formatStartTimeForDB(event.startDateTime);
+	console.log(location);
+	console.log(organizer);
+	console.log(start_time);
+	// connection.query("INSERT INTO EVENT(summary, start_time, location, organizer, cal_file) VALUES" 
+	// + "('" + event.summary + "'," + file.calToJSON.version + ",'" + file.calToJSON.prodID + "')", function (err, result) {
+	// 	if (err) {
+	// 		console.log("Something went wrong. " + err);
+	// 	}
+	// 	else {
+	// 		console.log('Inserted new file into FILE TABLE... Now getting entry ID');
+	// 		connection.query("SELECT cal_id FROM FILE WHERE file_Name = '" + file.filename + "'", function (err, result) {
+	// 			if (err) {
+	// 				console.log("Something went wrong. " + err);
+	// 			}
+	// 			else {
+	// 				var cal_id = result[0].cal_id;
+	// 				var i = 0;
+	// 				var events = file.calToJSON.events;
+	// 				for(i in events) {
+	// 					insertEvent(cal_id, event[i]);
+	// 				}
+	// 			}
+	// 		}); // end of getting event_id;
+	// 	}
+	// }); // end of inserting new event into EVENT TABLE
+}
+
+// return date.substring(0, 4) + "/" + date.substring(4, 6) + "/" + date.substring(6, 8);
+function formatStartTimeForDB(DT) {
+	var newFormat = DT.date.substring(0,4)+"-"+DT.date.substring(4,6)+"-"+DT.date.substring(6,8)+"T"+
+		DT.time.substring(0,2)+":"+DT.time.substring(2,4)+":"+DT.time.substring(4,6);
+	return newFormat;
+}
+
+// gets 
+function getPropertyDescriptionFromList(property, list) {
+	var i = 0;
+	if(list === undefined) return null;
+	for(i in list) {
+		if(list[i].name.equalsIgnoreCase(property)){
+			return list[i].description;
+		}
+	}
+	return null;
+}
+
 
 
 app.listen(portNum);

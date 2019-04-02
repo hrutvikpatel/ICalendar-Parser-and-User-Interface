@@ -24,7 +24,7 @@ $(document).ready(function () {
     // On page-load AJAX Example
 
     // this was removed temporarily.
-    // updateFileLogPanel();
+    updateFileLogPanel();
 
     // upload file
     $('#uploadFile').click(function (e) {
@@ -185,7 +185,7 @@ $(document).ready(function () {
     });
 
     // logouts out of database and disconnects database
-    $('#logoutBtn').click(function(e) {
+    $('#logoutBtn').click(function (e) {
         $.ajax({
             url: '/disconnectDatabase',
             type: 'get',
@@ -199,20 +199,10 @@ $(document).ready(function () {
     });
 
     // store all files to database tables
-    $('#storeAllFilesBtn').click(function(e) {
-        // get list of all valid files from json
-        let validFiles = [];
-        let i = 0;
-        for(i in json.allCal) {
-            if(json.allCal[i].status === 0) {
-                validFiles.push(json.allCal[i]);
-            }
-        }
-        console.log(validFiles);
+    $('#storeAllFilesBtn').click(function (e) {
         $.ajax({
             url: '/storeAllFiles',
             type: 'get',
-            data: {validFiles: validFiles},
             success: function (data) {
                 appendStatus(data.status, data.message);
             },
@@ -220,6 +210,10 @@ $(document).ready(function () {
                 appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
             }
         });
+    });
+
+    $('loginBtn').click(function(e){
+        document.getElementById("login-form").reset();
     });
 
     // form validation for add event
@@ -296,8 +290,7 @@ $(document).ready(function () {
         }, false);
     });
 
-    // hide logout btn
-    loginModal();
+
 
     // form validation for login
     var logInForm = document.getElementsByClassName('login-form-validation');
@@ -321,11 +314,14 @@ $(document).ready(function () {
                         updateFileLogPanel();
                         appendStatus(data.status, data.message);
                         $('#loginModal').modal('hide');
-                        if( data.status < 0 ) {
+                        if (data.status < 0) {
                             setTimeout(loginModal, 1000);
                         }
                         else {
                             $('#logoutBtn').show();
+                            $('#loginBtn').hide();
+                            document.getElementById("login-form").reset();
+                            $('#showDatabaseBtns').show();
                         }
                     },
                     fail: function (error) {
@@ -338,7 +334,6 @@ $(document).ready(function () {
                 $('#loginModal').modal('hide');
             }
         }, false);
-
     });
 });
 
@@ -420,12 +415,12 @@ function updateFileLogPanel() {
 
                 var i = 0;
                 var atLeastOneValidFile = false;
-                for( i in json.allCal) {
-                    if(json.allCal[i].status === 0){
+                for (i in json.allCal) {
+                    if (json.allCal[i].status === 0) {
                         atLeastOneValidFile = true;
                     }
                 }
-                if(atLeastOneValidFile) $('#storeAllFilesBtn').show();
+                if (atLeastOneValidFile) $('#storeAllFilesBtn').show();
                 else $('#storeAllFilesBtn').hide();
             }
 

@@ -36,68 +36,6 @@
 
     <div class="container shadow-lg">
 
-        <div class="btn-group float-right mb-5" role="group" aria-label="Basic example">
-            <!-- Login Button trigger modal -->
-            <button id="loginBtn" type="button" class="btn btn-primary" data-toggle="modal" data-target="#loginModal"
-                data-backdrop="static" data-keyboard="false">
-                &nbsp;Login&nbsp;
-            </button>
-
-            <!-- Login Modal -->
-            <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel"
-                aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="loginModalLabel">Login</h5>
-                        </div>
-                        <div class="modal-body">
-                            <form id="login-form" class="login-form-validation" novalidate>
-
-                                <!-- UserName Input -->
-                                <div class="form-row mb-3">
-                                    <label for="username">Username</label>
-                                    <div class="input-group">
-                                        <input id="username" name="username" type="text" class="form-control" required>
-                                        <div class="invalid-feedback">
-                                            Please enter your username.
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Database Name Input -->
-                                <div class="form-row mb-3">
-                                    <label for="database">Database Name</label>
-                                    <input type="text" class="form-control" id="database" name="database" required>
-                                    <div class="invalid-feedback">
-                                        Please enter a database name.
-                                    </div>
-                                </div>
-
-                                <!-- Password ID Input -->
-                                <div class="form-row mb-3">
-                                    <label for="password">Password</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="password" name="password" required>
-                                        <div class="invalid-feedback">
-                                            Please enter a your password.
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Close and Login -->
-                                <div class="btn-group">
-                                    <button class="btn btn-primary" id="modal-login-btn" type="submit">Login</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button id="logoutBtn" type="button" class="btn btn-danger">Logout</button>
-        </div>
-
 
         <!-- Status Panel -->
         <div class="parent">
@@ -616,10 +554,73 @@
         <!-- Database section -->
         <div class="parent">
             <!-- Database View Header and other related buttons -->
-            <span>
+            <span class="d-inline">
                 <p id="databaseSectionTitle" class="h3 font-weight-bold">Database View</p>
+
+                <!-- Login Button trigger modal -->
+                <button id="loginBtn" type="button" class="btn btn-primary" data-toggle="modal"
+                    data-target="#loginModal" data-backdrop="static" data-keyboard="false">
+                    &nbsp;Login&nbsp;
+                </button>
+
+                <!-- Login Modal -->
+                <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="loginModalLabel">Login</h5>
+                            </div>
+                            <div class="modal-body">
+                                <form id="login-form" class="login-form-validation" novalidate>
+
+                                    <!-- UserName Input -->
+                                    <div class="form-row mb-3">
+                                        <label for="username">Username</label>
+                                        <div class="input-group">
+                                            <input id="username" name="username" type="text" class="form-control"
+                                                required>
+                                            <div class="invalid-feedback">
+                                                Please enter your username.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Database Name Input -->
+                                    <div class="form-row mb-3">
+                                        <label for="database">Database Name</label>
+                                        <input type="text" class="form-control" id="database" name="database" required>
+                                        <div class="invalid-feedback">
+                                            Please enter a database name.
+                                        </div>
+                                    </div>
+
+                                    <!-- Password ID Input -->
+                                    <div class="form-row mb-3">
+                                        <label for="password">Password</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="password" name="password"
+                                                required>
+                                            <div class="invalid-feedback">
+                                                Please enter a your password.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Close and Login -->
+                                    <div class="btn-group">
+                                        <button class="btn btn-primary" id="modal-login-btn"
+                                            type="submit">Login</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button id="logoutBtn" type="button" class="btn btn-danger">Logout</button>
+
             </span>
-            <div class="btn-group" role="group" aria-label="Basic example">
+            <div class="btn-group" id="showDatabaseBtns" role="group" aria-label="Basic example">
                 <button id="storeAllFilesBtn" type="button" class="btn btn-secondary">Store All Files</button>
             </div>
         </div>

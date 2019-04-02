@@ -128,7 +128,7 @@ td {
 /* Database */
 
 /* hidden login button */
-#loginBtn {
+#showDatabaseBtns {
     display: none;
 }
 
