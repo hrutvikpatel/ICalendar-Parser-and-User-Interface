@@ -423,20 +423,12 @@ function insertFile(file) {
 			console.log("Something went wrong. " + err);
 		}
 		else {
-			console.log('Inserted new file into FILE TABLE... Now getting entry ID');
-			connection.query("SELECT cal_id FROM FILE WHERE file_Name = '" + file.filename + "'", function (err, result) {
-				if (err) {
-					console.log("Something went wrong. " + err);
-				}
-				else {
-					var cal_id = result[0].cal_id;
-					var i = 0;
-					var events = file.calToJSON.events;
-					for(i in events) {
-						insertEvent(cal_id, events[i]);
-					}
-				}
-			}); // end of getting cal_id;
+			var cal_id = result.insertId;
+			var i = 0;
+			var events = file.calToJSON.events;
+			for(i in events) {
+				insertEvent(cal_id, events[i]);
+			}
 		}
 	}); // end of inserting new file into FILE TABLE
 }
@@ -445,31 +437,29 @@ function insertEvent(cal_id, event) {
 	var location = getPropertyDescriptionFromList("location", event.properties);
 	var organizer = getPropertyDescriptionFromList("organizer", event.properties);
 	var start_time = formatStartTimeForDB(event.startDateTime);
-	console.log(location);
-	console.log(organizer);
-	console.log(start_time);
-	// connection.query("INSERT INTO EVENT(summary, start_time, location, organizer, cal_file) VALUES" 
-	// + "('" + event.summary + "'," + file.calToJSON.version + ",'" + file.calToJSON.prodID + "')", function (err, result) {
-	// 	if (err) {
-	// 		console.log("Something went wrong. " + err);
-	// 	}
-	// 	else {
-	// 		console.log('Inserted new file into FILE TABLE... Now getting entry ID');
-	// 		connection.query("SELECT cal_id FROM FILE WHERE file_Name = '" + file.filename + "'", function (err, result) {
-	// 			if (err) {
-	// 				console.log("Something went wrong. " + err);
-	// 			}
-	// 			else {
-	// 				var cal_id = result[0].cal_id;
-	// 				var i = 0;
-	// 				var events = file.calToJSON.events;
-	// 				for(i in events) {
-	// 					insertEvent(cal_id, event[i]);
-	// 				}
-	// 			}
-	// 		}); // end of getting event_id;
-	// 	}
-	// }); // end of inserting new event into EVENT TABLE
+	connection.query("INSERT INTO EVENT(summary, start_time, location, organizer, cal_file) VALUES" 
+	+ "('" + event.summary + "','" + start_time + "','" + location+ "','" + organizer + "'," + cal_id + ")", function (err, result) {
+		if (err) {
+			console.log("Something went wrong. " + err);
+		}
+		else {
+			var event_id = result.insertId;
+			var i = 0;
+			var alarms = event.alarms;
+			for(i in alarms) {
+				insertAlarm(event_id, alarms[i]);
+			}
+		}
+	}); // end of inserting new event into EVENT TABLE
+}
+
+function insertAlarm(event_id, alarm) {
+	connection.query("INSERT INTO ALARM(action, `trigger`, event) VALUES" 
+	+ "('" + alarm.action + "','" + alarm.trigger + "'," + event_id + ")", function (err, result) {
+		if (err) {
+			console.log("Something went wrong. " + err);
+		}
+	}); // end of inserting new alarm into ALARM TABLE
 }
 
 // return date.substring(0, 4) + "/" + date.substring(4, 6) + "/" + date.substring(6, 8);
@@ -484,7 +474,7 @@ function getPropertyDescriptionFromList(property, list) {
 	var i = 0;
 	if(list === undefined) return null;
 	for(i in list) {
-		if(list[i].name.equalsIgnoreCase(property)){
+		if(list[i].name.toUpperCase() === property.toUpperCase()){
 			return list[i].description;
 		}
 	}
