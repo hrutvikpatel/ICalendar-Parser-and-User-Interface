@@ -306,7 +306,8 @@ app.get('/connectDatabase', function (req, res) {
 		host: 'dursley.socs.uoguelph.ca',
 		user: data.username,
 		password: data.password,
-		database: data.database
+		database: data.database,
+		multipleStatements: true
 	});
 
 	connection.connect(function (err) {
@@ -431,74 +432,83 @@ app.get('/storeAllFiles', function (req, res) {
 				}
 			}
 
-			// add files that do not exist in the database
+			// make a list of insert queries
 			i = 0;
+			var fileValues = [];
+			var eventValues = [];
+			var alarmValues = [];
+			var alarm_id = 0;
+			var event_id = 0;
+			var cal_id = 0;
 			for (i in data) {
 				let file = data[i];
-				connection.query("SELECT * FROM FILE WHERE file_Name = '" + file.filename + "'", function (err, result) {
-					// if error code does not equal TABLE_EXISTS_ERROR then table is created, and or it already exists
-					if (err) {
-						console.log("Something went wrong. " + err);
+				cal_id++;
+				var subValuesF = [];
+
+				subValuesF.push(cal_id);
+				subValuesF.push(file.filename);
+				subValuesF.push(file.calToJSON.version);
+				subValuesF.push(file.calToJSON.prodID);
+				fileValues.push(subValuesF);
+
+				var j = 0;
+				var events = file.calToJSON.events;
+				let location, organizer, start_time;
+				for (j in events) {
+					var subValuesE = [];
+					event_id++;
+					// get descriptions of properties and format startDateTime for database
+					location = getPropertyDescriptionFromList("location", events[j].properties);
+					organizer = getPropertyDescriptionFromList("organizer", events[j].properties);
+					start_time = formatStartTimeForDB(events[j].startDateTime);
+					subValuesE.push(event_id);
+					subValuesE.push(events[j].summary);
+					subValuesE.push(start_time);
+					subValuesE.push(location);
+					subValuesE.push(organizer);
+					subValuesE.push(cal_id);
+					eventValues.push(subValuesE);
+
+					var alarms = events[j].alarms;
+					if (alarms.length > 0) {
+						var k = 0;
+						for (k in alarms) {
+							var subValuesA = [];
+							alarm_id++;
+							subValuesA.push(alarm_id)
+							subValuesA.push(alarms[k].action);
+							subValuesA.push(alarms[k].trigger);
+							subValuesA.push(event_id);
+							alarmValues.push(subValuesA);
+						}
 					}
-					else if (result.length === 0) { // file does not exist so insert file data
-						connection.query("INSERT INTO FILE(file_Name, version, prod_id) VALUES ('" + file.filename + "'," + file.calToJSON.version + ",'" + file.calToJSON.prodID + "')", function (err, result) {
-							if (err) {
-								console.log("Something went wrong. " + err);
-							}
-							else {
-								var j = 0;
-								var events = file.calToJSON.events;
-								var eventValues = [];
-								let location, organizer, start_time;
-								if (events.length > 0) {
-									for (j in events) {
-										var subValues = [];
-										// get descriptions of properties and format startDateTime for database
-										location = getPropertyDescriptionFromList("location", events[j].properties);
-										organizer = getPropertyDescriptionFromList("organizer", events[j].properties);
-										start_time = formatStartTimeForDB(events[j].startDateTime);
-										subValues.push(events[j].summary);
-										subValues.push(start_time);
-										subValues.push(location);
-										subValues.push(organizer);
-										subValues.push(result.insertId);
-										eventValues.push(subValues);
-									}
-									//query
-									console.log(eventValues);
-									connection.query("INSERT INTO EVENT(summary, start_time, location, organizer, cal_file) VALUES ?", [eventValues], function (err, result) {
-										if (err) {
-											console.log("Something went wrong. " + err);
-										}
-										else {
-											j = 0;
-											var event_foriegn_key;
-											var alarmValues = [];
-											for( j in events ){
-												event_foriegn_key = eventValues[j][4];
-												var alarms = events[j].alarms;
-												var k = 0;
-												for( k in alarms ) {
-													var subValues = [];
-													subValues.push(alarms[k].action);
-													subValues.push(alarms[k].trigger);
-													subValues.push(event_foriegn_key);
-													alarmValues.push(subValues);
-												}
-											}
-											connection.query("INSERT INTO ALARM(action, `trigger`, event) VALUES ?", [alarmValues], function (err, result) {
-												if (err) {
-													console.log("Something went wrong. " + err);
-												}
-											}); // end of inserting new alarm into ALARM TABLE
-										}
-									}); // end of inserting new event into EVENT TABLE
-								}
-							}
-						}); // end of inserting new file into FILE TABLE
-					}
-				}); // end of checking if file name exists
+				}
 			}
+
+			// perform all queries
+			connection.query("REPLACE INTO FILE(cal_id, file_Name, version, prod_id) VALUES ?", [fileValues], function (err, result) {
+				if (err) {
+					console.log("Something went wrong. " + err);
+				}
+				else {
+					//query
+					connection.query("REPLACE INTO EVENT(event_id, summary, start_time, location, organizer, cal_file) VALUES ?", [eventValues], function (err, result) {
+						if (err) {
+							console.log("Something went wrong. " + err);
+						}
+						else {
+							connection.query("REPLACE INTO ALARM(alarm_id, action, `trigger`, event) VALUES ?", [alarmValues], function (err, result) {
+								if (err) {
+									console.log("Something went wrong. " + err);
+								}
+								else {
+									res.send('');
+								}
+							}); // end of inserting new alarm into ALARM TABLE
+						}
+					}); // end of inserting new event into EVENT TABLE
+				}
+			}); // end of inserting new file into FILE TABLE
 		}
 		else {
 			console.log("Something went wrong: " + err);
@@ -603,6 +613,10 @@ app.get('/clearAllData', function (req, res) {
 
 // gets database status
 app.get('/getDBStatus', function (req, res) {
+	getDBStatus(res);
+});
+
+function getDBStatus(res) {
 	var numFiles = 0;
 	var numEvents = 0;
 	var numAlarms = 0;
@@ -639,7 +653,7 @@ app.get('/getDBStatus', function (req, res) {
 			}); // end of count query for number of events in EVENT table
 		}
 	}); // end of count query for number of files in FILE table
-});
+}
 
 // pluralizes a word, depending on the count
 function pluralizer(count, toPluralize) {

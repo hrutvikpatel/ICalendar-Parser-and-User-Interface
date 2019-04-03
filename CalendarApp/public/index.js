@@ -206,7 +206,6 @@ $(document).ready(function () {
             url: '/storeAllFiles',
             type: 'get',
             success: function () {
-                appendStatus(data.status, data.message);
                 $("#query1-3-body").children().remove();
                 $(".query-label").val('');
                 $('#displayDBStatusBtn').click();
@@ -284,6 +283,7 @@ $(document).ready(function () {
         // 1. SELECT * FROM EVENT ORDER BY start_time;
         // 2. SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time; <-- replace the file_Name with the file you want to search
         // 3. SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time;
+        // 4. SELECT alarm_id, action, `trigger`, event, event_id, cal_id FROM ALARM, FILE, EVENT WHERE ( FILE.file_Name = 'sourceCal.ics' AND FILE.cal_id = EVENT.cal_file  AND EVENT.event_id = ALARM.event ) GROUP BY ALARM.alarm_id  ORDER BY EVENT.start_time; <-- gets all alarms in an event
 
         switch (queryNum) {
             case "query1":
