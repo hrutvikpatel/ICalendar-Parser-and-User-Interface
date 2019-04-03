@@ -630,28 +630,9 @@
                         aria-haspopup="true" aria-expanded="false">Select A Query</button>
                     <div id="query-dropdown-menu" class="dropdown-menu mw-25">
                         <button value="query1" class="dropdown-item" type="button">Display all events sorted by start date.</button>
-                        <button value="query2" class="dropdown-item" type="button">Display events from a specific file. This query fetches the start dates and summaries of all events.</button>
 
-                        <div class="modal fade" id="query2Modal" tabindex="-1" role="dialog">
-                            <div class="modal-dialog" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Modal title</h5>
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p>Modal body text goes here.</p>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-dismiss="modal">Close</button>
-                                        <button type="button" class="btn btn-primary">Save changes</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <button value="query2" class="dropdown-item" type="button" data-toggle="modal"
+                            data-target="#query2Modal" data-backdrop="static" data-keyboard="false">Display events from a specific file. This query fetches the start dates and summaries of all events.</button>
 
                         <button value="query3" class="dropdown-item" type="button">Displays all events that might conflict with each other, becuase they happen at the same time.</button>
                         <button value="query4" class="dropdown-item" type="button">To be decided on.</button>
@@ -661,6 +642,48 @@
                 </div>
             </div>
         </div>
+
+
+         <!-- Modal -->
+         <div class="modal fade" id="query2Modal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+         <div class="modal-dialog" role="document">
+             <div class="modal-content">
+                 <div class="modal-header">
+                     <h5 class="modal-title" id="exampleModalLabel">Select a File</h5>
+                 </div>
+                 <div class="modal-body">
+                    <form id="query-filename-select" class="query-filename-select-validation" novalidate>
+                        <div class=form-group>
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control input-group"
+                                        aria-label="Text input with dropdown button"
+                                        id="input-query-select" name="filename" readonly required>
+
+                                    <!-- Add a fake select calendar input to all validating to work-->
+                                    <input type="text" class="form-control input-group"
+                                        aria-label="Text input with dropdown button"
+                                        id="fake-input-query-select" required>
+
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary dropdown-toggle"
+                                            type="button" data-toggle="dropdown" aria-haspopup="true"
+                                            aria-expanded="false" aria-required="true">Select
+                                            Calendar</button>
+                                        <div class="dropdown-menu" id="dropdown-query">
+                                        </div>
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        Please select a file.
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                 </div>
+             </div>
+         </div>
+     </div>
 
         <hr>
         <!-- Query Choosen -->

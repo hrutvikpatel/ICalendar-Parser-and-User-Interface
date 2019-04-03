@@ -121,7 +121,7 @@ td {
 }
 
 /* hidden input */
-#fake-input-add-event-cal-select {
+#fake-input-add-event-cal-select, #fake-input-query-select {
     display: none;
 }
 

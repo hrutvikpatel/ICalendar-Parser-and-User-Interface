@@ -261,6 +261,13 @@ $(document).ready(function () {
         document.getElementById("login-form").reset();
     });
 
+    // adds file choose in add event modal to text box that is readonly
+    $('#dropdown-query').on('click', '.dropdown-item', function (e) {
+        var filename = $(this).text();
+        $("#input-query-select").val(filename);
+        $("#fake-input-query-select").val(filename);
+    });
+
     // // adds file choose in add event modal to text box that is readonly
     // $('#dropdown-add-event').on('click', '.dropdown-item', function (e) {
     //     var filename = $(this).text();
@@ -278,17 +285,44 @@ $(document).ready(function () {
         // 2. SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time; <-- replace the file_Name with the file you want to search
         // 3. SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time;
 
-
         switch (queryNum) {
             case "query1":
-                query("SELECT * FROM EVENT ORDER BY start_time");
+                query1to3("SELECT * FROM EVENT ORDER BY start_time");
                 break;
             case "query2":
                 // get file that the user wants
-                query("SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time");
+                $.ajax({
+                    url: '/getFileNamesInDB',
+                    type: 'get',
+                    success: function (data) {
+                        // add file names to Select btn
+
+                        // get objects and remove all children items in dropdown
+                        var dropDown = document.getElementById('dropdown-query');
+                        $("#dropdown-query").children().remove();
+                        var i = 0;
+
+
+                        // add new children to dropdown
+                        for (i in data) {
+                            var newBtn = document.createElement('button');
+                            newBtn.setAttribute("class", "dropdown-item");
+                            newBtn.setAttribute("type", "button");
+                            newBtn.innerHTML = data[i].file_Name;
+
+                            dropDown.appendChild(newBtn);
+                        }
+                    },
+                    fail: function (error) {
+                        // request error add error to status panel
+                        appendStatus(-1, "An internal error occured with the server request when adding a new event to iCalendar file.");
+                    }
+                });
+                // var filename = getFileToQuery();
+                // query1to3("SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time");
                 break;
             case "query3":
-                query("SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time");
+                query1to3("SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time");
                 break;
             // case "query4":
             //     query4();
@@ -432,6 +466,30 @@ $(document).ready(function () {
             }
         }, false);
     });
+
+    // form validation for login
+    var querySelectFileForm = document.getElementsByClassName('query-filename-select-validation');
+
+    // validation
+    var validation4 = Array.prototype.filter.call(querySelectFileForm, function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            if (form.checkValidity() === false) { // prevent submit if form is invalid
+                event.stopPropagation();
+                form.classList.add('was-validated');
+            }
+            else { // proceed to adding the event
+                var filename = $("#input-query-select").val();
+                ; // serialize form and send it to server
+                console.log(filename);
+                query1to3("SELECT * FROM FILE, EVENT WHERE ( file_Name = '"+ filename +"' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time");
+                // close modal
+                $('#query2Modal').modal('hide');
+                document.getElementById("query-filename-select").reset();
+            }
+        }, false);
+    });
+
 });
 
 // resets login modal and reprompts for login info
@@ -738,9 +796,9 @@ function uploadFile() {
 //Query Functions
 
 // query1: Displays all events sorted by start date.
-function query(sql) {
+function query1to3(sql) {
     $.ajax({
-        url: '/getQuery',
+        url: '/getQuery1-3',
         type: 'get',
         data: {
             sql: sql
@@ -761,7 +819,15 @@ function appendQuery1to3(query) {
     var newRow, eventNo, summary, startTime, location, organizer;
     // insert new row.
 
+    var i = 0;
+
     // add events to calendar view panel
+    if(query.length === 0) {
+        newRow = table.insertRow(i);
+        newRow.innerHTML = "<tr><td colspan=\"5\"><p class=\"font-weight-bold\">Empty Query Result</p></td></tr><tr>";
+        return;
+    }
+
     for (i in query) {
         newRow = table.insertRow(i);
         eventNo = newRow.insertCell(0);

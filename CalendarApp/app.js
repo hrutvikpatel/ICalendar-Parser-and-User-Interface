@@ -371,13 +371,49 @@ function createTable(sql) {
 	});
 }
 
+// //store all files to database endpoint request
+// app.get('/storeAllFiles', function (req, res) {
+// 	fs.readdir(__dirname + '/uploads', function (error, filenames) {
+// 		if (error == null) {
+
+// 			let data = [];
+// 			var i = 0;
+// 			for (i in filenames) {
+// 				// create JSON for all files and save it into an array of calendar JSON
+// 				let dbPtrPtr = ref.alloc(calPtrPtr);
+// 				let status = sharedLib.createCalendar("./uploads/" + filenames[i], dbPtrPtr);
+// 				let fileCalPtr = dbPtrPtr.deref();
+// 				let fileJSON = sharedLib.calendarToJSON(fileCalPtr);
+// 				let newJSON = {
+// 					"status": status,
+// 					"filename": filenames[i],
+// 					"calToJSON": JSON.parse(fileJSON)
+// 				};
+// 				// only valid files are allowed to be added to the database
+// 				if (newJSON.status === 0) {
+// 					data.push(newJSON)
+// 				}
+// 			}
+
+// 			// add files that do not exist in the database
+// 			var i = 0;
+// 			for (i in data) {
+// 				checkIfFileExists(data[i]);
+// 			}
+// 		}
+// 		else {
+// 			console.log("Something went wrong: " + err);
+// 		}
+// 	});
+// });
+
 //store all files to database endpoint request
 app.get('/storeAllFiles', function (req, res) {
 	fs.readdir(__dirname + '/uploads', function (error, filenames) {
 		if (error == null) {
 
 			let data = [];
-			var i = 0;
+			let i = 0;
 			for (i in filenames) {
 				// create JSON for all files and save it into an array of calendar JSON
 				let dbPtrPtr = ref.alloc(calPtrPtr);
@@ -396,9 +432,72 @@ app.get('/storeAllFiles', function (req, res) {
 			}
 
 			// add files that do not exist in the database
-			var i = 0;
+			i = 0;
 			for (i in data) {
-				checkIfFileExists(data[i]);
+				let file = data[i];
+				connection.query("SELECT * FROM FILE WHERE file_Name = '" + file.filename + "'", function (err, result) {
+					// if error code does not equal TABLE_EXISTS_ERROR then table is created, and or it already exists
+					if (err) {
+						console.log("Something went wrong. " + err);
+					}
+					else if (result.length === 0) { // file does not exist so insert file data
+						connection.query("INSERT INTO FILE(file_Name, version, prod_id) VALUES ('" + file.filename + "'," + file.calToJSON.version + ",'" + file.calToJSON.prodID + "')", function (err, result) {
+							if (err) {
+								console.log("Something went wrong. " + err);
+							}
+							else {
+								var j = 0;
+								var events = file.calToJSON.events;
+								var eventValues = [];
+								let location, organizer, start_time;
+								if (events.length > 0) {
+									for (j in events) {
+										var subValues = [];
+										// get descriptions of properties and format startDateTime for database
+										location = getPropertyDescriptionFromList("location", events[j].properties);
+										organizer = getPropertyDescriptionFromList("organizer", events[j].properties);
+										start_time = formatStartTimeForDB(events[j].startDateTime);
+										subValues.push(events[j].summary);
+										subValues.push(start_time);
+										subValues.push(location);
+										subValues.push(organizer);
+										subValues.push(result.insertId);
+										eventValues.push(subValues);
+									}
+									//query
+									console.log(eventValues);
+									connection.query("INSERT INTO EVENT(summary, start_time, location, organizer, cal_file) VALUES ?", [eventValues], function (err, result) {
+										if (err) {
+											console.log("Something went wrong. " + err);
+										}
+										else {
+											j = 0;
+											var event_foriegn_key;
+											var alarmValues = [];
+											for( j in events ){
+												event_foriegn_key = eventValues[j][4];
+												var alarms = events[j].alarms;
+												var k = 0;
+												for( k in alarms ) {
+													var subValues = [];
+													subValues.push(alarms[k].action);
+													subValues.push(alarms[k].trigger);
+													subValues.push(event_foriegn_key);
+													alarmValues.push(subValues);
+												}
+											}
+											connection.query("INSERT INTO ALARM(action, `trigger`, event) VALUES ?", [alarmValues], function (err, result) {
+												if (err) {
+													console.log("Something went wrong. " + err);
+												}
+											}); // end of inserting new alarm into ALARM TABLE
+										}
+									}); // end of inserting new event into EVENT TABLE
+								}
+							}
+						}); // end of inserting new file into FILE TABLE
+					}
+				}); // end of checking if file name exists
 			}
 		}
 		else {
@@ -472,10 +571,8 @@ function insertAlarm(event_id, alarm) {
 
 // format startDateTime struct into a format for MYSQL database
 function formatStartTimeForDB(DT) {
-	console.log(DT);
 	var newFormat = DT.date.substring(0, 4) + "-" + DT.date.substring(4, 6) + "-" + DT.date.substring(6, 8) + "T" +
 		DT.time.substring(0, 2) + ":" + DT.time.substring(2, 4) + ":" + DT.time.substring(4, 6);
-		console.log(newFormat);
 	return newFormat;
 }
 
@@ -557,7 +654,7 @@ function pluralizer(count, toPluralize) {
 // 2. SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time; <-- replace the file_Name with the file you want to search
 // 3. SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time;
 
-app.get('/getQuery', function (req, res) {
+app.get('/getQuery1-3', function (req, res) {
 	connection.query(req.query.sql, function (err, result) {
 		if (err) {
 			console.log("Something went wrong. " + err);
@@ -570,6 +667,18 @@ app.get('/getQuery', function (req, res) {
 				result: result
 			};
 			res.send(data);
+		}
+	});
+});
+
+app.get('/getFileNamesInDB', function (req, res) {
+	connection.query("SELECT file_Name FROM FILE", function (err, result) {
+		if (err) {
+			console.log("Something went wrong. " + err);
+			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
+		}
+		else {
+			res.send(result);
 		}
 	});
 });
