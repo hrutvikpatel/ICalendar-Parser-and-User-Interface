@@ -629,19 +629,15 @@
                     <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">Select A Query</button>
                     <div id="query-dropdown-menu" class="dropdown-menu mw-25">
-                        <button value="query1" class="dropdown-item" type="button">Display all events sorted by start
-                            date.</button>
+                        <button value="query1" class="dropdown-item" type="button">Display all events sorted by start date.</button>
 
                         <button value="query2" class="dropdown-item" type="button" data-toggle="modal"
-                            data-target="#query2Modal" data-backdrop="static" data-keyboard="false">Display events from
-                            a specific file. This query fetches the start dates and summaries of all events.</button>
+                            data-target="#query2Modal" data-backdrop="static" data-keyboard="false">Display events from a specific file. This query fetches the start dates and summaries of all events.</button>
 
-                        <button value="query3" class="dropdown-item" type="button">Displays all events that might
-                            conflict with each other, becuase they happen at the same time.</button>
-                        <button value="query4" class="dropdown-item" type="button">Display all alarms from in a
-                            Calendar.</button>
-                        <button value="query5" class="dropdown-item" type="button">To be decided on.</button>
-                        <button value="query6" class="dropdown-item" type="button">To be decided on.</button>
+                        <button value="query3" class="dropdown-item" type="button">Displays all events that might conflict with each other, becuase they happen at the same time.</button>
+                        <button value="query4" class="dropdown-item" type="button">Display all alarms from in a Calendar.</button>
+                        <button value="query5" class="dropdown-item" type="button">Displays events from a specific file, with a specified location.</button>
+                        <button value="query6" class="dropdown-item" type="button">Displays events from a specific file, with a specified organizer</button>
                     </div>
                 </div>
             </div>
@@ -676,7 +672,7 @@
                 </select>
             </div>
 
-            <button id="submit-query-2" class="btn btn-primary mb-3" type="submit">Submit Query</button>
+            <button id="submit-query" class="btn btn-primary mb-3" type="submit">Submit Query</button>
         </form>
 
         <div class="table-responsive query1-3">

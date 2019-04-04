@@ -291,6 +291,7 @@ $(document).ready(function () {
                 query(1, "SELECT * FROM EVENT ORDER BY start_time");
                 break;
             case "query2":
+                $('#submit-query').attr("value", "2");
                 populateQuerySelectFilename();
                 $('#query-form').show();
                 $('#query-select-file-div').show();
@@ -299,21 +300,48 @@ $(document).ready(function () {
                 query(3, "SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time");
                 break;
             case "query4":
-                query(4, "SELECT action, `trigger` FROM ALARM, FILE, EVENT WHERE ( FILE.file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file  AND EVENT.event_id = ALARM.event ) GROUP BY ALARM.alarm_id  ORDER BY EVENT.start_time");
+                $('#submit-query').attr("value", "4");
+                populateQuerySelectFilename();
+                $('#query-form').show();
+                $('#query-select-file-div').show();
                 break;
-            // case "query5":
-            //     query5();
-            //     break;
-            // case "query6":
-            //     query6();
-            //     break;
+            case "query5":
+                $('#submit-query').attr("value", "5");
+                populateQuerySelectFilename();
+                populateQuerySelectLocation();
+                $('#query-form').show();
+                $('#query-select-file-div').show();
+                $('#query-location-div').show();
+                break;
+            case "query6":
+                $('#submit-query').attr("value", "6");
+                populateQuerySelectFilename();
+                populateQuerySelectOrganizer();
+                $('#query-form').show();
+                $('#query-select-file-div').show();
+                $('#query-organizer-div').show();
+                break;
         }
     });
 
-    $('#query-form').submit(function(e) {
+    $('#query-form').submit(function (e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log($('#query-form').serialize());
+        var btn = document.getElementById('submit-query');
+
+        // execute query 2
+        if (btn.getAttribute('value') === '2') {
+            query(2, "SELECT start_time, summary FROM FILE, EVENT WHERE ( file_Name = '" + $('#query-select-file').val() + "' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time");
+        }
+        else if (btn.getAttribute('value') === '4') {
+            query(4, "SELECT action, `trigger` FROM ALARM, FILE, EVENT WHERE ( FILE.file_Name = '" + $('#query-select-file').val() + "' AND FILE.cal_id = EVENT.cal_file  AND EVENT.event_id = ALARM.event ) GROUP BY ALARM.alarm_id  ORDER BY EVENT.start_time");
+        }
+        else if (btn.getAttribute('value') === '5') {
+            query(5, "SELECT location, start_time, summary, organizer FROM FILE, EVENT WHERE( file_Name = '" + $('#query-select-file').val() + "' AND  cal_id = cal_file AND location = '" + $('#query-location').val() + "') ORDER BY start_time");
+        }
+        else if (btn.getAttribute('value') === '6') {
+            query(6, "SELECT location, start_time, summary, organizer FROM FILE, EVENT WHERE( file_Name = '" + $('#query-select-file').val() + "' AND organizer = '" + $('#query-organizer').val() +"' AND  cal_id = cal_file) ORDER BY start_time;");
+        }
     })
 
     // form validation for add event
@@ -775,6 +803,8 @@ function uploadFile() {
 
 // query1: Displays all events sorted by start date.
 function query(queryNum, sql) {
+    $("#query-body").children().remove();
+    $("#query-header").children().remove();
     $.ajax({
         url: '/getQuery',
         type: 'get',
@@ -883,6 +913,20 @@ function appendQuery1(query) {
 
 function appendQuery2(query) {
 
+    // add table header cells
+    var headerRow = document.getElementById("query-header");
+    var num = document.createElement("TH");
+    var summaryHeaderCell = document.createElement("TH");
+    var startTimeHeaderCell = document.createElement("TH");
+
+    num.innerHTML = "<th scope=\"col\">#</th>";
+    summaryHeaderCell.innerHTML = "<th scope=\"col\">Summary</th>";
+    startTimeHeaderCell.innerHTML = "<th scope=\"col\">Start-Time</th>";
+
+    headerRow.appendChild(num);
+    headerRow.appendChild(startTimeHeaderCell);
+    headerRow.appendChild(summaryHeaderCell);
+
     var table = document.getElementById("query-body");
     var newRow, eventNo, summary, startTime, location, organizer;
     // insert new row.
@@ -899,32 +943,15 @@ function appendQuery2(query) {
     for (i in query) {
         newRow = table.insertRow(i);
         eventNo = newRow.insertCell(0);
-        summary = newRow.insertCell(1);
-        startTime = newRow.insertCell(2);
-        location = newRow.insertCell(3);
-        organizer = newRow.insertCell(4);
+        startTime = newRow.insertCell(1);
+        summary = newRow.insertCell(2);
+
 
         // add event details 
         eventNo.innerHTML = +i + 1;
         summary.innerHTML = query[i].summary;
         summary.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
         startTime.innerHTML = "<p class=\"flex-nowrap\" style=\"white-space: nowrap\">" + parseStart_time(query[i].start_time) + "</p>";
-        location.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
-        organizer.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
-
-        if (query[i].location === "NULL") {
-            location.innerHTML = "--"
-        }
-        else {
-            location.innerHTML = query[i].location;
-        }
-
-        if (query[i].organizer === "NULL") {
-            organizer.innerHTML = "--"
-        }
-        else {
-            organizer.innerHTML = query[i].organizer;
-        }
     }
 }
 
@@ -1040,6 +1067,26 @@ function appendQuery4(query) {
 
 function appendQuery5(query) {
 
+    // add table header cells
+    var headerRow = document.getElementById("query-header");
+    var num = document.createElement("TH");
+    var startTimeHeaderCell = document.createElement("TH");
+    var locationHeaderCell = document.createElement("TH");
+    var organizerHeaderCell = document.createElement("TH");
+    var summaryHeaderCell = document.createElement("TH");
+
+    num.innerHTML = "<th scope=\"col\">#</th>";
+    startTimeHeaderCell.innerHTML = "<th scope=\"col\">Start-Time</th>";
+    locationHeaderCell.innerHTML = "<th scope=\"col\">Location</th>";
+    organizerHeaderCell.innerHTML = "<th scope=\"col\">Organizer</th>";
+    summaryHeaderCell.innerHTML = "<th scope=\"col\">Summary</th>";
+
+    headerRow.appendChild(num);
+    headerRow.appendChild(startTimeHeaderCell);
+    headerRow.appendChild(locationHeaderCell);
+    headerRow.appendChild(organizerHeaderCell);
+    headerRow.appendChild(summaryHeaderCell);
+
     var table = document.getElementById("query-body");
     var newRow, eventNo, summary, startTime, location, organizer;
     // insert new row.
@@ -1056,10 +1103,10 @@ function appendQuery5(query) {
     for (i in query) {
         newRow = table.insertRow(i);
         eventNo = newRow.insertCell(0);
-        summary = newRow.insertCell(1);
-        startTime = newRow.insertCell(2);
-        location = newRow.insertCell(3);
-        organizer = newRow.insertCell(4);
+        startTime = newRow.insertCell(1);
+        location = newRow.insertCell(2);
+        organizer = newRow.insertCell(3);
+        summary = newRow.insertCell(4);
 
         // add event details 
         eventNo.innerHTML = +i + 1;
@@ -1087,6 +1134,26 @@ function appendQuery5(query) {
 
 function appendQuery6(query) {
 
+    // add table header cells
+    var headerRow = document.getElementById("query-header");
+    var num = document.createElement("TH");
+    var startTimeHeaderCell = document.createElement("TH");
+    var locationHeaderCell = document.createElement("TH");
+    var organizerHeaderCell = document.createElement("TH");
+    var summaryHeaderCell = document.createElement("TH");
+
+    num.innerHTML = "<th scope=\"col\">#</th>";
+    startTimeHeaderCell.innerHTML = "<th scope=\"col\">Start-Time</th>";
+    locationHeaderCell.innerHTML = "<th scope=\"col\">Location</th>";
+    organizerHeaderCell.innerHTML = "<th scope=\"col\">Organizer</th>";
+    summaryHeaderCell.innerHTML = "<th scope=\"col\">Summary</th>";
+
+    headerRow.appendChild(num);
+    headerRow.appendChild(startTimeHeaderCell);
+    headerRow.appendChild(locationHeaderCell);
+    headerRow.appendChild(organizerHeaderCell);
+    headerRow.appendChild(summaryHeaderCell);
+
     var table = document.getElementById("query-body");
     var newRow, eventNo, summary, startTime, location, organizer;
     // insert new row.
@@ -1103,10 +1170,10 @@ function appendQuery6(query) {
     for (i in query) {
         newRow = table.insertRow(i);
         eventNo = newRow.insertCell(0);
-        summary = newRow.insertCell(1);
-        startTime = newRow.insertCell(2);
-        location = newRow.insertCell(3);
-        organizer = newRow.insertCell(4);
+        startTime = newRow.insertCell(1);
+        location = newRow.insertCell(2);
+        organizer = newRow.insertCell(3);
+        summary = newRow.insertCell(4);
 
         // add event details 
         eventNo.innerHTML = +i + 1;
@@ -1183,7 +1250,7 @@ function populateQuerySelectLocation() {
             // add new children to dropdown
             for (i in data) {
                 newOption = document.createElement('option');
-                if(data[i].location === "NULL") {
+                if (data[i].location === "NULL") {
                     newOption.innerHTML = "NO LOCATION SPECIFIED";
                 }
                 else {
@@ -1215,7 +1282,7 @@ function populateQuerySelectOrganizer() {
             // add new children to dropdown
             for (i in data) {
                 newOption = document.createElement('option');
-                if(data[i].organizer === "NULL") {
+                if (data[i].organizer === "NULL") {
                     newOption.innerHTML = "NO ORGANIZER SPECIFIED";
                 }
                 else {
