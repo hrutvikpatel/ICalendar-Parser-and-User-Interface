@@ -120,6 +120,11 @@ td {
     white-space: nowrap;
 }
 
+/* hidden select */
+#query-form, #query-select-file-div, #query-location-div, #query-organizer-div {
+    display: none;
+}
+
 /* hidden input */
 #fake-input-add-event-cal-select, #fake-input-query-select {
     display: none;

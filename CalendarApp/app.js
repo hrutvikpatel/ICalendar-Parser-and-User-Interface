@@ -668,7 +668,7 @@ function pluralizer(count, toPluralize) {
 // 2. SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time; <-- replace the file_Name with the file you want to search
 // 3. SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time;
 
-app.get('/getQuery1-3', function (req, res) {
+app.get('/getQuery', function (req, res) {
 	connection.query(req.query.sql, function (err, result) {
 		if (err) {
 			console.log("Something went wrong. " + err);
@@ -687,6 +687,31 @@ app.get('/getQuery1-3', function (req, res) {
 
 app.get('/getFileNamesInDB', function (req, res) {
 	connection.query("SELECT file_Name FROM FILE", function (err, result) {
+		if (err) {
+			console.log("Something went wrong. " + err);
+			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
+		}
+		else {
+			res.send(result);
+		}
+	});
+});
+
+
+app.get('/getLocations', function (req, res) {
+	connection.query("SELECT location FROM EVENT GROUP BY location ORDER BY LOCATION", function (err, result) {
+		if (err) {
+			console.log("Something went wrong. " + err);
+			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));
+		}
+		else {
+			res.send(result);
+		}
+	});
+});
+
+app.get('/getOrganizers', function (req, res) {
+	connection.query("SELECT organizer FROM EVENT GROUP BY organizer ORDER BY organizer", function (err, result) {
 		if (err) {
 			console.log("Something went wrong. " + err);
 			res.send(getErrorMessage(-1, "Something went wrong when querying the database."));

@@ -629,61 +629,23 @@
                     <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">Select A Query</button>
                     <div id="query-dropdown-menu" class="dropdown-menu mw-25">
-                        <button value="query1" class="dropdown-item" type="button">Display all events sorted by start date.</button>
+                        <button value="query1" class="dropdown-item" type="button">Display all events sorted by start
+                            date.</button>
 
                         <button value="query2" class="dropdown-item" type="button" data-toggle="modal"
-                            data-target="#query2Modal" data-backdrop="static" data-keyboard="false">Display events from a specific file. This query fetches the start dates and summaries of all events.</button>
+                            data-target="#query2Modal" data-backdrop="static" data-keyboard="false">Display events from
+                            a specific file. This query fetches the start dates and summaries of all events.</button>
 
-                        <button value="query3" class="dropdown-item" type="button">Displays all events that might conflict with each other, becuase they happen at the same time.</button>
-                        <button value="query4" class="dropdown-item" type="button">To be decided on.</button>
+                        <button value="query3" class="dropdown-item" type="button">Displays all events that might
+                            conflict with each other, becuase they happen at the same time.</button>
+                        <button value="query4" class="dropdown-item" type="button">Display all alarms from in a
+                            Calendar.</button>
                         <button value="query5" class="dropdown-item" type="button">To be decided on.</button>
                         <button value="query6" class="dropdown-item" type="button">To be decided on.</button>
                     </div>
                 </div>
             </div>
         </div>
-
-
-         <!-- Modal -->
-         <div class="modal fade" id="query2Modal" tabindex="-1" role="dialog"
-         aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-         <div class="modal-dialog" role="document">
-             <div class="modal-content">
-                 <div class="modal-header">
-                     <h5 class="modal-title" id="exampleModalLabel">Select a File</h5>
-                 </div>
-                 <div class="modal-body">
-                    <form id="query-filename-select" class="query-filename-select-validation" novalidate>
-                        <div class=form-group>
-                                <div class="input-group mb-3">
-                                    <input type="text" class="form-control input-group"
-                                        aria-label="Text input with dropdown button"
-                                        id="input-query-select" name="filename" readonly required>
-
-                                    <!-- Add a fake select calendar input to all validating to work-->
-                                    <input type="text" class="form-control input-group"
-                                        aria-label="Text input with dropdown button"
-                                        id="fake-input-query-select" required>
-
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary dropdown-toggle"
-                                            type="button" data-toggle="dropdown" aria-haspopup="true"
-                                            aria-expanded="false" aria-required="true">Select
-                                            Calendar</button>
-                                        <div class="dropdown-menu" id="dropdown-query">
-                                        </div>
-                                    </div>
-                                    <div class="invalid-feedback">
-                                        Please select a file.
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Submit</button>
-                        </form>
-                 </div>
-             </div>
-         </div>
-     </div>
 
         <hr>
         <!-- Query Choosen -->
@@ -694,20 +656,38 @@
             </div>
             <input type="text" class="form-control query-label" readonly>
         </div>
+
+        <form id="query-form">
+            <div id="query-select-file-div">
+                <label for="query-select-file">Select an iCal File</label>
+                <select id="query-select-file" class="custom-select mb-3" name="file">
+                </select>
+            </div>
+
+            <div id="query-location-div">
+                <label for="query-location">Select a Location</label>
+                <select id="query-location" class="custom-select mb-3" name="location">
+                </select>
+            </div>
+
+            <div id="query-organizer-div">
+                <label for="query-organizer">Select an Organizer</label>
+                <select id="query-organizer" class="custom-select mb-3" name="organizer">
+                </select>
+            </div>
+
+            <button id="submit-query-2" class="btn btn-primary mb-3" type="submit">Submit Query</button>
+        </form>
+
         <div class="table-responsive query1-3">
             <table class="table cal-view" data-toggle="table" data-striped="true" data-search="true"
                 data-show-toggle="true" data-mobile-responsive="true">
                 <thead class="thead-light sticky">
-                    <tr class="cal-header">
-                        <th scope="col">Event No</th>
-                        <th scope="col">Summary</th>
-                        <th scope="col">Start-Time</th>
-                        <th scope="col">Location</th>
-                        <th scope="col">Organizer</th>
+                    <tr class="cal-header" id="query-header">
                     </tr>
                 </thead>
                 <!-- Calendar View Table Body -->
-                <tbody id="query1-3-body">
+                <tbody id="query-body">
                 </tbody>
             </table>
         </div>
@@ -719,3 +699,45 @@
 </body>
 
 </html>
+
+
+<!-- Modal -->
+<!-- <div class="modal fade" id="query2Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Select a File</h5>
+                    </div>
+                    <div class="modal-body">
+                        <form id="query-filename-select" class="query-filename-select-validation" novalidate>
+                            <div class=form-group>
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control input-group"
+                                        aria-label="Text input with dropdown button" id="input-query-select"
+                                        name="filename" readonly required> -->
+
+<!-- Add a fake select calendar input to all validating to work-->
+<!-- <input type="text" class="form-control input-group"
+                                        aria-label="Text input with dropdown button" id="fake-input-query-select"
+                                        required>
+
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                            aria-required="true">Select
+                                            Calendar</button>
+                                        <div class="dropdown-menu" id="dropdown-query">
+                                        </div>
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        Please select a file.
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div> -->

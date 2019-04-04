@@ -206,7 +206,7 @@ $(document).ready(function () {
             url: '/storeAllFiles',
             type: 'get',
             success: function () {
-                $("#query1-3-body").children().remove();
+                $("#query-body").children().remove();
                 $(".query-label").val('');
                 $('#displayDBStatusBtn').click();
             },
@@ -225,7 +225,7 @@ $(document).ready(function () {
                 $('#displayDBStatusBtn').click();
                 $('#clearAllDataBtn').show();
                 $('#querySelectBtn').show();
-                $("#query1-3-body").children().remove();
+                $("#query-body").children().remove();
                 $(".query-label").val('');
             },
             fail: function (error) {
@@ -264,20 +264,21 @@ $(document).ready(function () {
     $('#dropdown-query').on('click', '.dropdown-item', function (e) {
         var filename = $(this).text();
         $("#input-query-select").val(filename);
-        $("#fake-input-query-select").val(filename);
+        // $("#fake-input-query-select").val(filename);
     });
 
-    // // adds file choose in add event modal to text box that is readonly
-    // $('#dropdown-add-event').on('click', '.dropdown-item', function (e) {
-    //     var filename = $(this).text();
-    //     $("#input-add-event-cal-select").val(filename);
-    //     $("#fake-input-add-event-cal-select").val(filename);
-    // });
+
     $('#querySelectBtn').on('click', '.dropdown-item', function (e) {
         var queryNum = $(this).val();
 
-        $("#query1-3-body").children().remove();
+        $("#query-body").children().remove();
+        $("#query-header").children().remove();
         $(".query-label").val($(this).html());
+
+        hideQueryForm();
+        $("#query-select-file").children().remove();
+        $("#query-location").children().remove();
+        $("#query-organizer").children().remove();
 
         // QUERIES
         // 1. SELECT * FROM EVENT ORDER BY start_time;
@@ -287,46 +288,19 @@ $(document).ready(function () {
 
         switch (queryNum) {
             case "query1":
-                query1to3("SELECT * FROM EVENT ORDER BY start_time");
+                query(1, "SELECT * FROM EVENT ORDER BY start_time");
                 break;
             case "query2":
-                // get file that the user wants
-                $.ajax({
-                    url: '/getFileNamesInDB',
-                    type: 'get',
-                    success: function (data) {
-                        // add file names to Select btn
-
-                        // get objects and remove all children items in dropdown
-                        var dropDown = document.getElementById('dropdown-query');
-                        $("#dropdown-query").children().remove();
-                        var i = 0;
-
-
-                        // add new children to dropdown
-                        for (i in data) {
-                            var newBtn = document.createElement('button');
-                            newBtn.setAttribute("class", "dropdown-item");
-                            newBtn.setAttribute("type", "button");
-                            newBtn.innerHTML = data[i].file_Name;
-
-                            dropDown.appendChild(newBtn);
-                        }
-                    },
-                    fail: function (error) {
-                        // request error add error to status panel
-                        appendStatus(-1, "An internal error occured with the server request when adding a new event to iCalendar file.");
-                    }
-                });
-                // var filename = getFileToQuery();
-                // query1to3("SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time");
+                populateQuerySelectFilename();
+                $('#query-form').show();
+                $('#query-select-file-div').show();
                 break;
             case "query3":
-                query1to3("SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time");
+                query(3, "SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time");
                 break;
-            // case "query4":
-            //     query4();
-            //     break;
+            case "query4":
+                query(4, "SELECT action, `trigger` FROM ALARM, FILE, EVENT WHERE ( FILE.file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file  AND EVENT.event_id = ALARM.event ) GROUP BY ALARM.alarm_id  ORDER BY EVENT.start_time");
+                break;
             // case "query5":
             //     query5();
             //     break;
@@ -335,6 +309,12 @@ $(document).ready(function () {
             //     break;
         }
     });
+
+    $('#query-form').submit(function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log($('#query-form').serialize());
+    })
 
     // form validation for add event
     var addEventForm = document.getElementsByClassName('add-event-needs-validation');
@@ -410,8 +390,6 @@ $(document).ready(function () {
         }, false);
     });
 
-
-
     // form validation for login
     var logInForm = document.getElementsByClassName('login-form-validation');
 
@@ -482,7 +460,7 @@ $(document).ready(function () {
                 var filename = $("#input-query-select").val();
                 ; // serialize form and send it to server
                 console.log(filename);
-                query1to3("SELECT * FROM FILE, EVENT WHERE ( file_Name = '"+ filename +"' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time");
+                query(2, "SELECT * FROM FILE, EVENT WHERE ( file_Name = '" + filename + "' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time");
                 // close modal
                 $('#query2Modal').modal('hide');
                 document.getElementById("query-filename-select").reset();
@@ -796,16 +774,36 @@ function uploadFile() {
 //Query Functions
 
 // query1: Displays all events sorted by start date.
-function query1to3(sql) {
+function query(queryNum, sql) {
     $.ajax({
-        url: '/getQuery1-3',
+        url: '/getQuery',
         type: 'get',
         data: {
             sql: sql
         },
         success: function (data) {
             appendStatus(data.status, data.message);
-            appendQuery1to3(data.result);
+
+            switch (queryNum) {
+                case 1:
+                    appendQuery1(data.result);
+                    break;
+                case 2:
+                    appendQuery2(data.result);
+                    break;
+                case 3:
+                    appendQuery3(data.result);
+                    break;
+                case 4:
+                    appendQuery4(data.result);
+                    break;
+                case 5:
+                    appendQuery5(data.result);
+                    break;
+                case 6:
+                    appendQuery6(data.result);
+                    break;
+            }
         },
         fail: function (error) {
             appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
@@ -813,16 +811,39 @@ function query1to3(sql) {
     });
 }
 
-function appendQuery1to3(query) {
 
-    var table = document.getElementById("query1-3-body");
+function appendQuery1(query) {
+
+    // add table header cells
+    var headerRow = document.getElementById("query-header");
+    var num = document.createElement("TH");
+    var summaryHeaderCell = document.createElement("TH");
+    var startTimeHeaderCell = document.createElement("TH");
+    var locationHeaderCell = document.createElement("TH");
+    var organizerHeaderCell = document.createElement("TH");
+
+    num.innerHTML = "<th scope=\"col\">#</th>";
+    summaryHeaderCell.innerHTML = "<th scope=\"col\">Summary</th>";
+    startTimeHeaderCell.innerHTML = "<th scope=\"col\">Start-Time</th>";
+    locationHeaderCell.innerHTML = "<th scope=\"col\">Location</th>";
+    organizerHeaderCell.innerHTML = "<th scope=\"col\">Organizer</th>";
+
+    headerRow.appendChild(num);
+    headerRow.appendChild(summaryHeaderCell);
+    headerRow.appendChild(startTimeHeaderCell);
+    headerRow.appendChild(locationHeaderCell);
+    headerRow.appendChild(organizerHeaderCell);
+
+
+    // add table body data
+    var table = document.getElementById("query-body");
     var newRow, eventNo, summary, startTime, location, organizer;
     // insert new row.
 
     var i = 0;
 
     // add events to calendar view panel
-    if(query.length === 0) {
+    if (query.length === 0) {
         newRow = table.insertRow(i);
         newRow.innerHTML = "<tr><td colspan=\"5\"><p class=\"font-weight-bold\">Empty Query Result</p></td></tr><tr>";
         return;
@@ -860,8 +881,363 @@ function appendQuery1to3(query) {
     }
 }
 
+function appendQuery2(query) {
+
+    var table = document.getElementById("query-body");
+    var newRow, eventNo, summary, startTime, location, organizer;
+    // insert new row.
+
+    var i = 0;
+
+    // add events to calendar view panel
+    if (query.length === 0) {
+        newRow = table.insertRow(i);
+        newRow.innerHTML = "<tr><td colspan=\"5\"><p class=\"font-weight-bold\">Empty Query Result</p></td></tr><tr>";
+        return;
+    }
+
+    for (i in query) {
+        newRow = table.insertRow(i);
+        eventNo = newRow.insertCell(0);
+        summary = newRow.insertCell(1);
+        startTime = newRow.insertCell(2);
+        location = newRow.insertCell(3);
+        organizer = newRow.insertCell(4);
+
+        // add event details 
+        eventNo.innerHTML = +i + 1;
+        summary.innerHTML = query[i].summary;
+        summary.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+        startTime.innerHTML = "<p class=\"flex-nowrap\" style=\"white-space: nowrap\">" + parseStart_time(query[i].start_time) + "</p>";
+        location.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+        organizer.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+
+        if (query[i].location === "NULL") {
+            location.innerHTML = "--"
+        }
+        else {
+            location.innerHTML = query[i].location;
+        }
+
+        if (query[i].organizer === "NULL") {
+            organizer.innerHTML = "--"
+        }
+        else {
+            organizer.innerHTML = query[i].organizer;
+        }
+    }
+}
+
+function appendQuery3(query) {
+
+    // add table header cells
+    var headerRow = document.getElementById("query-header");
+    var num = document.createElement("TH");
+    var summaryHeaderCell = document.createElement("TH");
+    var startTimeHeaderCell = document.createElement("TH");
+    var locationHeaderCell = document.createElement("TH");
+    var organizerHeaderCell = document.createElement("TH");
+
+    num.innerHTML = "<th scope=\"col\">#</th>";
+    summaryHeaderCell.innerHTML = "<th scope=\"col\">Summary</th>";
+    startTimeHeaderCell.innerHTML = "<th scope=\"col\">Start-Time</th>";
+    locationHeaderCell.innerHTML = "<th scope=\"col\">Location</th>";
+    organizerHeaderCell.innerHTML = "<th scope=\"col\">Organizer</th>";
+
+    headerRow.appendChild(num);
+    headerRow.appendChild(summaryHeaderCell);
+    headerRow.appendChild(startTimeHeaderCell);
+    headerRow.appendChild(locationHeaderCell);
+    headerRow.appendChild(organizerHeaderCell);
+
+    var table = document.getElementById("query-body");
+    var newRow, eventNo, summary, startTime, location, organizer;
+    // insert new row.
+
+    var i = 0;
+
+    // add events to calendar view panel
+    if (query.length === 0) {
+        newRow = table.insertRow(i);
+        newRow.innerHTML = "<tr><td colspan=\"5\"><p class=\"font-weight-bold\">Empty Query Result</p></td></tr><tr>";
+        return;
+    }
+
+    for (i in query) {
+        newRow = table.insertRow(i);
+        eventNo = newRow.insertCell(0);
+        summary = newRow.insertCell(1);
+        startTime = newRow.insertCell(2);
+        location = newRow.insertCell(3);
+        organizer = newRow.insertCell(4);
+
+        // add event details 
+        eventNo.innerHTML = +i + 1;
+        summary.innerHTML = query[i].summary;
+        summary.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+        startTime.innerHTML = "<p class=\"flex-nowrap\" style=\"white-space: nowrap\">" + parseStart_time(query[i].start_time) + "</p>";
+        location.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+        organizer.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+
+        if (query[i].location === "NULL") {
+            location.innerHTML = "--"
+        }
+        else {
+            location.innerHTML = query[i].location;
+        }
+
+        if (query[i].organizer === "NULL") {
+            organizer.innerHTML = "--"
+        }
+        else {
+            organizer.innerHTML = query[i].organizer;
+        }
+    }
+}
+
+function appendQuery4(query) {
+
+    // add table header cells
+    var headerRow = document.getElementById("query-header");
+    var num = document.createElement("TH");
+    var actionHeaderCell = document.createElement("TH");
+    var triggerHeaderCell = document.createElement("TH");
+
+    num.innerHTML = "<th scope=\"col\">#</th>";
+    actionHeaderCell.innerHTML = "<th scope=\"col\">Action</th>";
+    triggerHeaderCell.innerHTML = "<th scope=\"col\">Trigger</th>";
+
+
+    headerRow.appendChild(num);
+    headerRow.appendChild(actionHeaderCell);
+    headerRow.appendChild(triggerHeaderCell);
+
+    var table = document.getElementById("query-body");
+    var newRow, alarmNo, action, trigger;
+    // insert new row.
+
+    var i = 0;
+
+    // add events to calendar view panel
+    if (query.length === 0) {
+        newRow = table.insertRow(i);
+        newRow.innerHTML = "<tr><td colspan=\"5\"><p class=\"font-weight-bold\">Empty Query Result</p></td></tr><tr>";
+        return;
+    }
+
+    for (i in query) {
+        newRow = table.insertRow(i);
+        alarmNo = newRow.insertCell(0);
+        action = newRow.insertCell(1);
+        trigger = newRow.insertCell(2);
+
+        // add event details 
+        alarmNo.innerHTML = +i + 1;
+        action.innerHTML = query[i].action;
+        trigger.innerHTML = "<p class=\"flex-nowrap\" style=\"white-space: nowrap\">" + query[i].trigger + "</p>";
+    }
+}
+
+function appendQuery5(query) {
+
+    var table = document.getElementById("query-body");
+    var newRow, eventNo, summary, startTime, location, organizer;
+    // insert new row.
+
+    var i = 0;
+
+    // add events to calendar view panel
+    if (query.length === 0) {
+        newRow = table.insertRow(i);
+        newRow.innerHTML = "<tr><td colspan=\"5\"><p class=\"font-weight-bold\">Empty Query Result</p></td></tr><tr>";
+        return;
+    }
+
+    for (i in query) {
+        newRow = table.insertRow(i);
+        eventNo = newRow.insertCell(0);
+        summary = newRow.insertCell(1);
+        startTime = newRow.insertCell(2);
+        location = newRow.insertCell(3);
+        organizer = newRow.insertCell(4);
+
+        // add event details 
+        eventNo.innerHTML = +i + 1;
+        summary.innerHTML = query[i].summary;
+        summary.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+        startTime.innerHTML = "<p class=\"flex-nowrap\" style=\"white-space: nowrap\">" + parseStart_time(query[i].start_time) + "</p>";
+        location.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+        organizer.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+
+        if (query[i].location === "NULL") {
+            location.innerHTML = "--"
+        }
+        else {
+            location.innerHTML = query[i].location;
+        }
+
+        if (query[i].organizer === "NULL") {
+            organizer.innerHTML = "--"
+        }
+        else {
+            organizer.innerHTML = query[i].organizer;
+        }
+    }
+}
+
+function appendQuery6(query) {
+
+    var table = document.getElementById("query-body");
+    var newRow, eventNo, summary, startTime, location, organizer;
+    // insert new row.
+
+    var i = 0;
+
+    // add events to calendar view panel
+    if (query.length === 0) {
+        newRow = table.insertRow(i);
+        newRow.innerHTML = "<tr><td colspan=\"5\"><p class=\"font-weight-bold\">Empty Query Result</p></td></tr><tr>";
+        return;
+    }
+
+    for (i in query) {
+        newRow = table.insertRow(i);
+        eventNo = newRow.insertCell(0);
+        summary = newRow.insertCell(1);
+        startTime = newRow.insertCell(2);
+        location = newRow.insertCell(3);
+        organizer = newRow.insertCell(4);
+
+        // add event details 
+        eventNo.innerHTML = +i + 1;
+        summary.innerHTML = query[i].summary;
+        summary.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+        startTime.innerHTML = "<p class=\"flex-nowrap\" style=\"white-space: nowrap\">" + parseStart_time(query[i].start_time) + "</p>";
+        location.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+        organizer.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
+
+        if (query[i].location === "NULL") {
+            location.innerHTML = "--"
+        }
+        else {
+            location.innerHTML = query[i].location;
+        }
+
+        if (query[i].organizer === "NULL") {
+            organizer.innerHTML = "--"
+        }
+        else {
+            organizer.innerHTML = query[i].organizer;
+        }
+    }
+}
+
+// hides entire query form
+function hideQueryForm() {
+    $('#query-form').hide();
+    $('#query-select-file-div').hide();
+    $('#query-location-div').hide();
+    $('#query-organizer-div').hide();
+}
+
+function populateQuerySelectFilename() {
+    $.ajax({
+        url: '/getFileNamesInDB',
+        type: 'get',
+        success: function (data) {
+            // add file names to Select btn
+
+            // get objects and remove all children items in dropdown
+            var select = document.getElementById('query-select-file');
+            $("#query-select-file").children().remove();
+            var i = 0;
+            var newOption;
+
+            // add new children to dropdown
+            for (i in data) {
+                newOption = document.createElement('option');
+                newOption.innerHTML = data[i].file_Name;
+                select.appendChild(newOption);
+            }
+        },
+        fail: function (error) {
+            // request error add error to status panel
+            appendStatus(-1, "An internal error occured with the server request when adding a new event to iCalendar file.");
+        }
+    });
+}
+
+function populateQuerySelectLocation() {
+    $.ajax({
+        url: '/getLocations',
+        type: 'get',
+        success: function (data) {
+            // add file names to Select btn
+
+            // get objects and remove all children items in dropdown
+            var select = document.getElementById('query-location');
+            $("#query-location").children().remove();
+            var i = 0;
+            var newOption;
+
+            // add new children to dropdown
+            for (i in data) {
+                newOption = document.createElement('option');
+                if(data[i].location === "NULL") {
+                    newOption.innerHTML = "NO LOCATION SPECIFIED";
+                }
+                else {
+                    newOption.innerHTML = data[i].location;
+                }
+                select.appendChild(newOption);
+            }
+        },
+        fail: function (error) {
+            // request error add error to status panel
+            appendStatus(-1, "An internal error occured with the server request when adding a new event to iCalendar file.");
+        }
+    });
+}
+
+function populateQuerySelectOrganizer() {
+    $.ajax({
+        url: '/getOrganizers',
+        type: 'get',
+        success: function (data) {
+            // add file names to Select btn
+
+            // get objects and remove all children items in dropdown
+            var select = document.getElementById('query-organizer');
+            $("#query-organizer").children().remove();
+            var i = 0;
+            var newOption;
+
+            // add new children to dropdown
+            for (i in data) {
+                newOption = document.createElement('option');
+                if(data[i].organizer === "NULL") {
+                    newOption.innerHTML = "NO ORGANIZER SPECIFIED";
+                }
+                else {
+                    newOption.innerHTML = data[i].organizer;
+                }
+                select.appendChild(newOption);
+            }
+        },
+        fail: function (error) {
+            // request error add error to status panel
+            appendStatus(-1, "An internal error occured with the server request when adding a new event to iCalendar file.");
+        }
+    });
+}
+
 // parses start_time from mysql database
 function parseStart_time(toParse) {
     var parsed = toParse.substring(0, 10) + " " + toParse.substring(11, 19);
     return parsed;
 }
+
+// QUestions I have
+
+// 1. Can we display a general list of values for the queries instead of just start_time and summary?
+// 2. 
