@@ -331,6 +331,7 @@ app.get('/disconnectDatabase', function (req, res) {
 
 // creates tables for user if they do not exist
 function tablesToCreate() {
+	// create file table
 	var fileTable = "CREATE TABLE FILE ("
 		+ "cal_id INT AUTO_INCREMENT PRIMARY KEY,"
 		+ "file_Name VARCHAR(60) NOT NULL,"
@@ -339,6 +340,7 @@ function tablesToCreate() {
 
 	createTable(fileTable);
 
+	// create event table
 	var eventTable = "CREATE TABLE EVENT ("
 		+ "event_id INT AUTO_INCREMENT PRIMARY KEY,"
 		+ "summary VARCHAR(1024),"
@@ -350,6 +352,7 @@ function tablesToCreate() {
 
 	createTable(eventTable);
 
+	// create alarm table
 	var alarmTable = "CREATE TABLE ALARM ("
 		+ "alarm_id INT AUTO_INCREMENT PRIMARY KEY,"
 		+ "action VARCHAR(256) NOT NULL,"
@@ -371,42 +374,6 @@ function createTable(sql) {
 		}
 	});
 }
-
-// //store all files to database endpoint request
-// app.get('/storeAllFiles', function (req, res) {
-// 	fs.readdir(__dirname + '/uploads', function (error, filenames) {
-// 		if (error == null) {
-
-// 			let data = [];
-// 			var i = 0;
-// 			for (i in filenames) {
-// 				// create JSON for all files and save it into an array of calendar JSON
-// 				let dbPtrPtr = ref.alloc(calPtrPtr);
-// 				let status = sharedLib.createCalendar("./uploads/" + filenames[i], dbPtrPtr);
-// 				let fileCalPtr = dbPtrPtr.deref();
-// 				let fileJSON = sharedLib.calendarToJSON(fileCalPtr);
-// 				let newJSON = {
-// 					"status": status,
-// 					"filename": filenames[i],
-// 					"calToJSON": JSON.parse(fileJSON)
-// 				};
-// 				// only valid files are allowed to be added to the database
-// 				if (newJSON.status === 0) {
-// 					data.push(newJSON)
-// 				}
-// 			}
-
-// 			// add files that do not exist in the database
-// 			var i = 0;
-// 			for (i in data) {
-// 				checkIfFileExists(data[i]);
-// 			}
-// 		}
-// 		else {
-// 			console.log("Something went wrong: " + err);
-// 		}
-// 	});
-// });
 
 //store all files to database endpoint request
 app.get('/storeAllFiles', function (req, res) {
@@ -440,6 +407,8 @@ app.get('/storeAllFiles', function (req, res) {
 			var alarm_id = 0;
 			var event_id = 0;
 			var cal_id = 0;
+
+			// first generate an array of all file data to insert into the FILE table
 			for (i in data) {
 				let file = data[i];
 				cal_id++;
@@ -454,6 +423,7 @@ app.get('/storeAllFiles', function (req, res) {
 				var j = 0;
 				var events = file.calToJSON.events;
 				let location, organizer, start_time;
+				// add all event data for every file into eventValues for a single insert
 				for (j in events) {
 					var subValuesE = [];
 					event_id++;
@@ -472,6 +442,8 @@ app.get('/storeAllFiles', function (req, res) {
 					var alarms = events[j].alarms;
 					if (alarms.length > 0) {
 						var k = 0;
+
+						// add all alarms for every event into a list of alarm data in alarmValues to insert at once
 						for (k in alarms) {
 							var subValuesA = [];
 							alarm_id++;
@@ -485,22 +457,24 @@ app.get('/storeAllFiles', function (req, res) {
 				}
 			}
 
-			// perform all queries
+			// insert all file data
 			connection.query("REPLACE INTO FILE(cal_id, file_Name, version, prod_id) VALUES ?", [fileValues], function (err, result) {
 				if (err) {
-					console.log("Something went wrong. " + err);
+					res.send(getErrorMessage(-1, "Something went wrong. " + err));
+					return;
 				}
 				else {
-					//query
+					// insert all event data
 					connection.query("REPLACE INTO EVENT(event_id, summary, start_time, location, organizer, cal_file) VALUES ?", [eventValues], function (err, result) {
 						if (err) {
-							console.log("Something went wrong. " + err);
-						}
+							res.send(getErrorMessage(-1, "Something went wrong. " + err));
+							return;						}
 						else {
+							// insert all alarm data
 							connection.query("REPLACE INTO ALARM(alarm_id, action, `trigger`, event) VALUES ?", [alarmValues], function (err, result) {
 								if (err) {
-									console.log("Something went wrong. " + err);
-								}
+									res.send(getErrorMessage(-1, "Something went wrong. " + err));
+									return;								}
 								else {
 									res.send('');
 								}
@@ -589,13 +563,13 @@ function formatStartTimeForDB(DT) {
 // get property description from using property name
 function getPropertyDescriptionFromList(property, list) {
 	var i = 0;
-	if (list === undefined) return 'NULL';
+	if (list === undefined) return null;
 	for (i in list) {
 		if (list[i].name.toUpperCase() === property.toUpperCase()) {
 			return list[i].description;
 		}
 	}
-	return 'NULL';
+	return null;
 }
 
 // clears all data in database
@@ -668,6 +642,7 @@ function pluralizer(count, toPluralize) {
 // 2. SELECT * FROM FILE, EVENT WHERE ( file_Name = 'megaCal1.ics' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time; <-- replace the file_Name with the file you want to search
 // 3. SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time;
 
+// performs a query to the database
 app.get('/getQuery', function (req, res) {
 	connection.query(req.query.sql, function (err, result) {
 		if (err) {
@@ -697,7 +672,7 @@ app.get('/getFileNamesInDB', function (req, res) {
 	});
 });
 
-
+// end point to get a list of all locations from EVENT table
 app.get('/getLocations', function (req, res) {
 	connection.query("SELECT location FROM EVENT GROUP BY location ORDER BY LOCATION", function (err, result) {
 		if (err) {
@@ -710,6 +685,7 @@ app.get('/getLocations', function (req, res) {
 	});
 });
 
+// end point to get a list of organizers from EVENT table
 app.get('/getOrganizers', function (req, res) {
 	connection.query("SELECT organizer FROM EVENT GROUP BY organizer ORDER BY organizer", function (err, result) {
 		if (err) {

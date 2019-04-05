@@ -202,6 +202,14 @@ $(document).ready(function () {
 
     // store all files to database tables
     $('#storeAllFilesBtn').click(function (e) {
+        $("#query-body").children().remove();
+        $("#query-header").children().remove();
+        $(".query-label").val('');
+
+        hideQueryForm();
+        $("#query-select-file").children().remove();
+        $("#query-location").children().remove();
+        $("#query-organizer").children().remove();
         $.ajax({
             url: '/storeAllFiles',
             type: 'get',
@@ -211,12 +219,21 @@ $(document).ready(function () {
                 $('#displayDBStatusBtn').click();
             },
             fail: function (error) {
-                appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
+                appendStatus(-1, " An internal error occured with the server request.");
             }
         });
     });
 
+    // clear data in database tables
     $('#clearAllDataBtn').click(function (e) {
+        $("#query-body").children().remove();
+        $("#query-header").children().remove();
+        $(".query-label").val('');
+
+        hideQueryForm();
+        $("#query-select-file").children().remove();
+        $("#query-location").children().remove();
+        $("#query-organizer").children().remove();
         $.ajax({
             url: '/clearAllData',
             type: 'get',
@@ -229,12 +246,12 @@ $(document).ready(function () {
                 $(".query-label").val('');
             },
             fail: function (error) {
-                appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
+                appendStatus(-1, " An internal error occured with the server request.");
             }
         });
     });
 
-
+    // display database status
     $('#displayDBStatusBtn').click(function (e) {
         $.ajax({
             url: '/getDBStatus',
@@ -251,11 +268,12 @@ $(document).ready(function () {
                 }
             },
             fail: function (error) {
-                appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
+                appendStatus(-1, " An internal error occured with the server request.");
             }
         });
     });
 
+    // called when login button is clicks, verifies credentials and logs user in
     $('loginBtn').click(function (e) {
         document.getElementById("login-form").reset();
     });
@@ -267,10 +285,11 @@ $(document).ready(function () {
         // $("#fake-input-query-select").val(filename);
     });
 
-
+    // called when a query is selected
     $('#querySelectBtn').on('click', '.dropdown-item', function (e) {
         var queryNum = $(this).val();
 
+        // clear all unncessary UI
         $("#query-body").children().remove();
         $("#query-header").children().remove();
         $(".query-label").val($(this).html());
@@ -286,6 +305,7 @@ $(document).ready(function () {
         // 3. SELECT a.* FROM EVENT a JOIN (SELECT *, COUNT(start_time) FROM EVENT GROUP BY start_time HAVING COUNT(start_time) > 1) b ON a.start_time = b.start_time ORDER BY start_time;
         // 4. SELECT alarm_id, action, `trigger`, event, event_id, cal_id FROM ALARM, FILE, EVENT WHERE ( FILE.file_Name = 'sourceCal.ics' AND FILE.cal_id = EVENT.cal_file  AND EVENT.event_id = ALARM.event ) GROUP BY ALARM.alarm_id  ORDER BY EVENT.start_time; <-- gets all alarms in an event
 
+        // checks which query is called and performs an action accordingly
         switch (queryNum) {
             case "query1":
                 query(1, "SELECT * FROM EVENT ORDER BY start_time");
@@ -324,23 +344,36 @@ $(document).ready(function () {
         }
     });
 
+    // called when the user submits a query
     $('#query-form').submit(function (e) {
         e.preventDefault();
         e.stopPropagation();
         var btn = document.getElementById('submit-query');
 
-        // execute query 2
+        var filename = $('#query-select-file').val();
+
+        // execute query depending on variables it requires from the user like filename, location and organizer
         if (btn.getAttribute('value') === '2') {
-            query(2, "SELECT start_time, summary FROM FILE, EVENT WHERE ( file_Name = '" + $('#query-select-file').val() + "' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time");
+            query(2, "SELECT start_time, summary FROM FILE, EVENT WHERE ( file_Name = '" + filename + "' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time");
         }
         else if (btn.getAttribute('value') === '4') {
-            query(4, "SELECT action, `trigger` FROM ALARM, FILE, EVENT WHERE ( FILE.file_Name = '" + $('#query-select-file').val() + "' AND FILE.cal_id = EVENT.cal_file  AND EVENT.event_id = ALARM.event ) GROUP BY ALARM.alarm_id  ORDER BY EVENT.start_time");
+            query(4, "SELECT action, `trigger` FROM ALARM, FILE, EVENT WHERE ( FILE.file_Name = '" + filename + "' AND FILE.cal_id = EVENT.cal_file  AND EVENT.event_id = ALARM.event ) GROUP BY ALARM.alarm_id  ORDER BY EVENT.start_time");
         }
         else if (btn.getAttribute('value') === '5') {
-            query(5, "SELECT location, start_time, summary, organizer FROM FILE, EVENT WHERE( file_Name = '" + $('#query-select-file').val() + "' AND  cal_id = cal_file AND location = '" + $('#query-location').val() + "') ORDER BY start_time");
+            if($('#query-location').val() === 'EVENTS WITH NO LOCATION') {
+                query(5, "SELECT location, start_time, summary, organizer FROM FILE, EVENT WHERE( file_Name = '" + filename + "' AND  cal_id = cal_file AND location is NULL) ORDER BY start_time");
+            }
+            else {
+                query(5, "SELECT location, start_time, summary, organizer FROM FILE, EVENT WHERE( file_Name = '" + filename + "' AND  cal_id = cal_file AND location = '" + $('#query-location').val()  + "') ORDER BY start_time");
+            }
         }
         else if (btn.getAttribute('value') === '6') {
-            query(6, "SELECT location, start_time, summary, organizer FROM FILE, EVENT WHERE( file_Name = '" + $('#query-select-file').val() + "' AND organizer = '" + $('#query-organizer').val() +"' AND  cal_id = cal_file) ORDER BY start_time;");
+            if($('#query-organizer').val() === 'EVENTS WITH NO ORGANIZER') {
+                query(6, "SELECT location, start_time, summary, organizer FROM FILE, EVENT WHERE( file_Name = '" + filename + "' AND organizer is NULL AND  cal_id = cal_file) ORDER BY start_time;");
+            }
+            else {
+                query(6, "SELECT location, start_time, summary, organizer FROM FILE, EVENT WHERE( file_Name = '" + filename + "' AND organizer = '" +  $('#query-organizer').val() +"' AND  cal_id = cal_file) ORDER BY start_time;");
+            }
         }
     })
 
@@ -369,7 +402,7 @@ $(document).ready(function () {
                     },
                     fail: function (error) {
                         // request error add error to status panel
-                        appendStatus(-1, "An internal error occured with the server request when adding a new event to iCalendar file.");
+                        appendStatus(-1, "An internal error occured with the server request.");
                         $('#addEventModal').modal('hide');
                     }
                 });
@@ -407,7 +440,7 @@ $(document).ready(function () {
                         },
                         fail: function (error) {
                             // request error append error to status panel
-                            appendStatus(-1, "An internal error occured with the server request when creating a new iCalendar file.");
+                            appendStatus(-1, "An internal error occured with the server request.");
                             $('#createCalendarModal').modal('hide');
                         }
                     });
@@ -463,7 +496,7 @@ $(document).ready(function () {
                     },
                     fail: function (error) {
                         // request error add error to status panel
-                        appendStatus(-1, "An internal error occured with the server request when attempting to connect to your database.");
+                        appendStatus(-1, "An internal error occured with the server request.");
                         $('#loginModal').modal('hide');
                     }
                 });
@@ -472,30 +505,6 @@ $(document).ready(function () {
             }
         }, false);
     });
-
-    // form validation for login
-    var querySelectFileForm = document.getElementsByClassName('query-filename-select-validation');
-
-    // validation
-    var validation4 = Array.prototype.filter.call(querySelectFileForm, function (form) {
-        form.addEventListener('submit', function (event) {
-            event.preventDefault();
-            if (form.checkValidity() === false) { // prevent submit if form is invalid
-                event.stopPropagation();
-                form.classList.add('was-validated');
-            }
-            else { // proceed to adding the event
-                var filename = $("#input-query-select").val();
-                ; // serialize form and send it to server
-                console.log(filename);
-                query(2, "SELECT * FROM FILE, EVENT WHERE ( file_Name = '" + filename + "' AND FILE.cal_id = EVENT.cal_file ) ORDER BY EVENT.start_time");
-                // close modal
-                $('#query2Modal').modal('hide');
-                document.getElementById("query-filename-select").reset();
-            }
-        }, false);
-    });
-
 });
 
 // resets login modal and reprompts for login info
@@ -836,12 +845,12 @@ function query(queryNum, sql) {
             }
         },
         fail: function (error) {
-            appendStatus(-1, " An internal error occured with the server request when attempting to store all files to the database.");
+            appendStatus(-1, " An internal error occured with the server request.");
         }
     });
 }
 
-
+// appends query 1 to table
 function appendQuery1(query) {
 
     // add table header cells
@@ -858,6 +867,7 @@ function appendQuery1(query) {
     locationHeaderCell.innerHTML = "<th scope=\"col\">Location</th>";
     organizerHeaderCell.innerHTML = "<th scope=\"col\">Organizer</th>";
 
+    // append table headers
     headerRow.appendChild(num);
     headerRow.appendChild(summaryHeaderCell);
     headerRow.appendChild(startTimeHeaderCell);
@@ -879,6 +889,7 @@ function appendQuery1(query) {
         return;
     }
 
+    // add query result to table
     for (i in query) {
         newRow = table.insertRow(i);
         eventNo = newRow.insertCell(0);
@@ -895,14 +906,15 @@ function appendQuery1(query) {
         location.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
         organizer.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
 
-        if (query[i].location === "NULL") {
+        // if location or organizer is null indicate it is null
+        if (query[i].location === null) {
             location.innerHTML = "--"
         }
         else {
             location.innerHTML = query[i].location;
         }
 
-        if (query[i].organizer === "NULL") {
+        if (query[i].organizer === null) {
             organizer.innerHTML = "--"
         }
         else {
@@ -911,6 +923,7 @@ function appendQuery1(query) {
     }
 }
 
+// appends query 2 to table
 function appendQuery2(query) {
 
     // add table header cells
@@ -940,6 +953,7 @@ function appendQuery2(query) {
         return;
     }
 
+    // add query to table
     for (i in query) {
         newRow = table.insertRow(i);
         eventNo = newRow.insertCell(0);
@@ -955,6 +969,7 @@ function appendQuery2(query) {
     }
 }
 
+// appends query 3 to table
 function appendQuery3(query) {
 
     // add table header cells
@@ -971,11 +986,12 @@ function appendQuery3(query) {
     locationHeaderCell.innerHTML = "<th scope=\"col\">Location</th>";
     organizerHeaderCell.innerHTML = "<th scope=\"col\">Organizer</th>";
 
+    // append header to table
     headerRow.appendChild(num);
-    headerRow.appendChild(summaryHeaderCell);
     headerRow.appendChild(startTimeHeaderCell);
     headerRow.appendChild(locationHeaderCell);
     headerRow.appendChild(organizerHeaderCell);
+    headerRow.appendChild(summaryHeaderCell);
 
     var table = document.getElementById("query-body");
     var newRow, eventNo, summary, startTime, location, organizer;
@@ -990,13 +1006,14 @@ function appendQuery3(query) {
         return;
     }
 
+    // add query results to table
     for (i in query) {
         newRow = table.insertRow(i);
         eventNo = newRow.insertCell(0);
-        summary = newRow.insertCell(1);
-        startTime = newRow.insertCell(2);
-        location = newRow.insertCell(3);
-        organizer = newRow.insertCell(4);
+        startTime = newRow.insertCell(1);
+        location = newRow.insertCell(2);
+        organizer = newRow.insertCell(3);
+        summary = newRow.insertCell(4);
 
         // add event details 
         eventNo.innerHTML = +i + 1;
@@ -1006,14 +1023,14 @@ function appendQuery3(query) {
         location.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
         organizer.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
 
-        if (query[i].location === "NULL") {
+        if (query[i].location === null) {
             location.innerHTML = "--"
         }
         else {
             location.innerHTML = query[i].location;
         }
 
-        if (query[i].organizer === "NULL") {
+        if (query[i].organizer === null) {
             organizer.innerHTML = "--"
         }
         else {
@@ -1022,6 +1039,7 @@ function appendQuery3(query) {
     }
 }
 
+// append query 4 results to table
 function appendQuery4(query) {
 
     // add table header cells
@@ -1065,6 +1083,7 @@ function appendQuery4(query) {
     }
 }
 
+// append query 5 results to table
 function appendQuery5(query) {
 
     // add table header cells
@@ -1116,14 +1135,14 @@ function appendQuery5(query) {
         location.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
         organizer.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
 
-        if (query[i].location === "NULL") {
+        if (query[i].location === null) {
             location.innerHTML = "--"
         }
         else {
             location.innerHTML = query[i].location;
         }
 
-        if (query[i].organizer === "NULL") {
+        if (query[i].organizer === null) {
             organizer.innerHTML = "--"
         }
         else {
@@ -1132,6 +1151,7 @@ function appendQuery5(query) {
     }
 }
 
+// append query 6 results to table
 function appendQuery6(query) {
 
     // add table header cells
@@ -1183,14 +1203,14 @@ function appendQuery6(query) {
         location.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
         organizer.setAttribute("style", "wrap: hard !important; white-space: wrap; ");
 
-        if (query[i].location === "NULL") {
+        if (query[i].location === null) {
             location.innerHTML = "--"
         }
         else {
             location.innerHTML = query[i].location;
         }
 
-        if (query[i].organizer === "NULL") {
+        if (query[i].organizer === null) {
             organizer.innerHTML = "--"
         }
         else {
@@ -1207,6 +1227,7 @@ function hideQueryForm() {
     $('#query-organizer-div').hide();
 }
 
+// populates select file selection
 function populateQuerySelectFilename() {
     $.ajax({
         url: '/getFileNamesInDB',
@@ -1229,11 +1250,12 @@ function populateQuerySelectFilename() {
         },
         fail: function (error) {
             // request error add error to status panel
-            appendStatus(-1, "An internal error occured with the server request when adding a new event to iCalendar file.");
+            appendStatus(-1, "An internal error occured with the server request.");
         }
     });
 }
 
+// populates select location selection
 function populateQuerySelectLocation() {
     $.ajax({
         url: '/getLocations',
@@ -1250,8 +1272,8 @@ function populateQuerySelectLocation() {
             // add new children to dropdown
             for (i in data) {
                 newOption = document.createElement('option');
-                if (data[i].location === "NULL") {
-                    newOption.innerHTML = "NO LOCATION SPECIFIED";
+                if (data[i].location === null) {
+                    newOption.innerHTML = "EVENTS WITH NO LOCATION";
                 }
                 else {
                     newOption.innerHTML = data[i].location;
@@ -1261,11 +1283,12 @@ function populateQuerySelectLocation() {
         },
         fail: function (error) {
             // request error add error to status panel
-            appendStatus(-1, "An internal error occured with the server request when adding a new event to iCalendar file.");
+            appendStatus(-1, "An internal error occured with the server request.");
         }
     });
 }
 
+// populates select organizer selection
 function populateQuerySelectOrganizer() {
     $.ajax({
         url: '/getOrganizers',
@@ -1282,8 +1305,8 @@ function populateQuerySelectOrganizer() {
             // add new children to dropdown
             for (i in data) {
                 newOption = document.createElement('option');
-                if (data[i].organizer === "NULL") {
-                    newOption.innerHTML = "NO ORGANIZER SPECIFIED";
+                if (data[i].organizer === null) {
+                    newOption.innerHTML = "EVENTS WITH NO ORGANIZER";
                 }
                 else {
                     newOption.innerHTML = data[i].organizer;
@@ -1293,7 +1316,7 @@ function populateQuerySelectOrganizer() {
         },
         fail: function (error) {
             // request error add error to status panel
-            appendStatus(-1, "An internal error occured with the server request when adding a new event to iCalendar file.");
+            appendStatus(-1, "An internal error occured with the server request");
         }
     });
 }
@@ -1303,8 +1326,3 @@ function parseStart_time(toParse) {
     var parsed = toParse.substring(0, 10) + " " + toParse.substring(11, 19);
     return parsed;
 }
-
-// QUestions I have
-
-// 1. Can we display a general list of values for the queries instead of just start_time and summary?
-// 2. 

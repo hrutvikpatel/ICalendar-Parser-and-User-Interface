@@ -586,15 +586,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Database Name Input -->
-                                    <div class="form-row mb-3">
-                                        <label for="database">Database Name</label>
-                                        <input type="text" class="form-control" id="database" name="database" required>
-                                        <div class="invalid-feedback">
-                                            Please enter a database name.
-                                        </div>
-                                    </div>
-
                                     <!-- Password ID Input -->
                                     <div class="form-row mb-3">
                                         <label for="password">Password</label>
@@ -604,6 +595,15 @@
                                             <div class="invalid-feedback">
                                                 Please enter a your password.
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Database Name Input -->
+                                    <div class="form-row mb-3">
+                                        <label for="database">Database Name</label>
+                                        <input type="text" class="form-control" id="database" name="database" required>
+                                        <div class="invalid-feedback">
+                                            Please enter a database name.
                                         </div>
                                     </div>
 
@@ -620,6 +620,7 @@
                 <button id="logoutBtn" type="button" class="btn btn-danger">Logout</button>
             </div>
 
+            <!-- All database UI buttons -->
             <div class="btn-group" role="group">
                 <button id="displayDBStatusBtn" type="button" class="btn btn-success">Display DB Status</button>
                 <button id="clearAllDataBtn" type="button" class="btn btn-danger">Clear All Data</button>
@@ -630,12 +631,9 @@
                         aria-haspopup="true" aria-expanded="false">Select A Query</button>
                     <div id="query-dropdown-menu" class="dropdown-menu mw-25">
                         <button value="query1" class="dropdown-item" type="button">Display all events sorted by start date.</button>
-
-                        <button value="query2" class="dropdown-item" type="button" data-toggle="modal"
-                            data-target="#query2Modal" data-backdrop="static" data-keyboard="false">Display events from a specific file. This query fetches the start dates and summaries of all events.</button>
-
+                        <button value="query2" class="dropdown-item" type="button">Display events from a specific file. This query fetches the start dates and summaries of all events.</button>
                         <button value="query3" class="dropdown-item" type="button">Displays all events that might conflict with each other, becuase they happen at the same time.</button>
-                        <button value="query4" class="dropdown-item" type="button">Display all alarms from in a Calendar.</button>
+                        <button value="query4" class="dropdown-item" type="button">Display all alarms in a specified iCal file.</button>
                         <button value="query5" class="dropdown-item" type="button">Displays events from a specific file, with a specified location.</button>
                         <button value="query6" class="dropdown-item" type="button">Displays events from a specific file, with a specified organizer</button>
                     </div>
@@ -653,6 +651,7 @@
             <input type="text" class="form-control query-label" readonly>
         </div>
 
+        <!-- query form, allow user to modify certain queries -->
         <form id="query-form">
             <div id="query-select-file-div">
                 <label for="query-select-file">Select an iCal File</label>
@@ -675,6 +674,7 @@
             <button id="submit-query" class="btn btn-primary mb-3" type="submit">Submit Query</button>
         </form>
 
+        <!-- table in which queries are inserted -->
         <div class="table-responsive query1-3">
             <table class="table cal-view" data-toggle="table" data-striped="true" data-search="true"
                 data-show-toggle="true" data-mobile-responsive="true">
@@ -695,45 +695,3 @@
 </body>
 
 </html>
-
-
-<!-- Modal -->
-<!-- <div class="modal fade" id="query2Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-            aria-hidden="true" data-backdrop="static" data-keyboard="false">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Select a File</h5>
-                    </div>
-                    <div class="modal-body">
-                        <form id="query-filename-select" class="query-filename-select-validation" novalidate>
-                            <div class=form-group>
-                                <div class="input-group mb-3">
-                                    <input type="text" class="form-control input-group"
-                                        aria-label="Text input with dropdown button" id="input-query-select"
-                                        name="filename" readonly required> -->
-
-<!-- Add a fake select calendar input to all validating to work-->
-<!-- <input type="text" class="form-control input-group"
-                                        aria-label="Text input with dropdown button" id="fake-input-query-select"
-                                        required>
-
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary dropdown-toggle" type="button"
-                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                                            aria-required="true">Select
-                                            Calendar</button>
-                                        <div class="dropdown-menu" id="dropdown-query">
-                                        </div>
-                                    </div>
-                                    <div class="invalid-feedback">
-                                        Please select a file.
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Submit</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div> -->
